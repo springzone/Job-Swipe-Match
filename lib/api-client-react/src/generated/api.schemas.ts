@@ -144,6 +144,65 @@ export interface StatsSummary {
   topSkillsInDemand?: StatsSummaryTopSkillsInDemandItem[];
 }
 
+export type EmployerFeedItemCandidate = {
+  id: string;
+  anonymousHandle: string;
+  headline?: string | null;
+  location?: string | null;
+  yearsExperience?: number | null;
+  skills: string[];
+  desiredRole?: string | null;
+  openToRemote?: boolean | null;
+};
+
+export interface EmployerFeedItem {
+  swipeId: string;
+  candidate: EmployerFeedItemCandidate;
+  job: Job;
+  matchScore: number;
+  swipedAt: string;
+}
+
+export type EmployerDecisionInputDecision =
+  (typeof EmployerDecisionInputDecision)[keyof typeof EmployerDecisionInputDecision];
+
+export const EmployerDecisionInputDecision = {
+  accept: "accept",
+  pass: "pass",
+} as const;
+
+export interface EmployerDecisionInput {
+  decision: EmployerDecisionInputDecision;
+}
+
+export interface EmployerDecisionResult {
+  matched: boolean;
+  matchId?: string | null;
+}
+
+export type EmployerMatchStatus =
+  (typeof EmployerMatchStatus)[keyof typeof EmployerMatchStatus];
+
+export const EmployerMatchStatus = {
+  pending_confirmation: "pending_confirmation",
+  cv_sent: "cv_sent",
+  dismissed: "dismissed",
+} as const;
+
+export interface EmployerMatch {
+  id: string;
+  anonymousHandle: string;
+  /** Revealed only after candidate sends CV */
+  candidateName?: string | null;
+  candidateEmail?: string | null;
+  cvText?: string | null;
+  candidateSkills?: string[];
+  job: Job;
+  status: EmployerMatchStatus;
+  cvShared: boolean;
+  createdAt: string;
+}
+
 export type ActivityItemKind =
   (typeof ActivityItemKind)[keyof typeof ActivityItemKind];
 

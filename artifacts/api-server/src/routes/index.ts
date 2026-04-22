@@ -6,6 +6,7 @@ import swipesRouter from "./swipes";
 import matchesRouter from "./matches";
 import applicationsRouter from "./applications";
 import statsRouter from "./stats";
+import employerRouter from "./employer";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(swipesRouter);
 router.use(matchesRouter);
 router.use(applicationsRouter);
 router.use(statsRouter);
+router.use(employerRouter);
 
 export default router;

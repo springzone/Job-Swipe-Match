@@ -21,6 +21,11 @@ import type {
   Application,
   Candidate,
   CandidateUpdate,
+  Company,
+  EmployerDecisionInput,
+  EmployerDecisionResult,
+  EmployerFeedItem,
+  EmployerMatch,
   GetJobFeedParams,
   HealthStatus,
   Job,
@@ -970,6 +975,361 @@ export function useGetRecentActivity<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetRecentActivityQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List companies that an employer can act as (demo)
+ */
+export const getListEmployerCompaniesUrl = () => {
+  return `/api/employer/companies`;
+};
+
+export const listEmployerCompanies = async (
+  options?: RequestInit,
+): Promise<Company[]> => {
+  return customFetch<Company[]>(getListEmployerCompaniesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListEmployerCompaniesQueryKey = () => {
+  return [`/api/employer/companies`] as const;
+};
+
+export const getListEmployerCompaniesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listEmployerCompanies>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listEmployerCompanies>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListEmployerCompaniesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listEmployerCompanies>>
+  > = ({ signal }) => listEmployerCompanies({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listEmployerCompanies>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListEmployerCompaniesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listEmployerCompanies>>
+>;
+export type ListEmployerCompaniesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List companies that an employer can act as (demo)
+ */
+
+export function useListEmployerCompanies<
+  TData = Awaited<ReturnType<typeof listEmployerCompanies>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listEmployerCompanies>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListEmployerCompaniesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Pending candidates who right-swiped on this company's jobs
+ */
+export const getGetEmployerFeedUrl = (companyId: string) => {
+  return `/api/employer/${companyId}/feed`;
+};
+
+export const getEmployerFeed = async (
+  companyId: string,
+  options?: RequestInit,
+): Promise<EmployerFeedItem[]> => {
+  return customFetch<EmployerFeedItem[]>(getGetEmployerFeedUrl(companyId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetEmployerFeedQueryKey = (companyId: string) => {
+  return [`/api/employer/${companyId}/feed`] as const;
+};
+
+export const getGetEmployerFeedQueryOptions = <
+  TData = Awaited<ReturnType<typeof getEmployerFeed>>,
+  TError = ErrorType<unknown>,
+>(
+  companyId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getEmployerFeed>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetEmployerFeedQueryKey(companyId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getEmployerFeed>>> = ({
+    signal,
+  }) => getEmployerFeed(companyId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!companyId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getEmployerFeed>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetEmployerFeedQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getEmployerFeed>>
+>;
+export type GetEmployerFeedQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Pending candidates who right-swiped on this company's jobs
+ */
+
+export function useGetEmployerFeed<
+  TData = Awaited<ReturnType<typeof getEmployerFeed>>,
+  TError = ErrorType<unknown>,
+>(
+  companyId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getEmployerFeed>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetEmployerFeedQueryOptions(companyId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Accept (creates a match) or pass on a candidate
+ */
+export const getEmployerDecideUrl = (companyId: string, swipeId: string) => {
+  return `/api/employer/${companyId}/swipes/${swipeId}`;
+};
+
+export const employerDecide = async (
+  companyId: string,
+  swipeId: string,
+  employerDecisionInput: EmployerDecisionInput,
+  options?: RequestInit,
+): Promise<EmployerDecisionResult> => {
+  return customFetch<EmployerDecisionResult>(
+    getEmployerDecideUrl(companyId, swipeId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(employerDecisionInput),
+    },
+  );
+};
+
+export const getEmployerDecideMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof employerDecide>>,
+    TError,
+    {
+      companyId: string;
+      swipeId: string;
+      data: BodyType<EmployerDecisionInput>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof employerDecide>>,
+  TError,
+  { companyId: string; swipeId: string; data: BodyType<EmployerDecisionInput> },
+  TContext
+> => {
+  const mutationKey = ["employerDecide"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof employerDecide>>,
+    {
+      companyId: string;
+      swipeId: string;
+      data: BodyType<EmployerDecisionInput>;
+    }
+  > = (props) => {
+    const { companyId, swipeId, data } = props ?? {};
+
+    return employerDecide(companyId, swipeId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type EmployerDecideMutationResult = NonNullable<
+  Awaited<ReturnType<typeof employerDecide>>
+>;
+export type EmployerDecideMutationBody = BodyType<EmployerDecisionInput>;
+export type EmployerDecideMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Accept (creates a match) or pass on a candidate
+ */
+export const useEmployerDecide = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof employerDecide>>,
+    TError,
+    {
+      companyId: string;
+      swipeId: string;
+      data: BodyType<EmployerDecisionInput>;
+    },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof employerDecide>>,
+  TError,
+  { companyId: string; swipeId: string; data: BodyType<EmployerDecisionInput> },
+  TContext
+> => {
+  return useMutation(getEmployerDecideMutationOptions(options));
+};
+
+/**
+ * @summary Matches and applications belonging to this company
+ */
+export const getListEmployerMatchesUrl = (companyId: string) => {
+  return `/api/employer/${companyId}/matches`;
+};
+
+export const listEmployerMatches = async (
+  companyId: string,
+  options?: RequestInit,
+): Promise<EmployerMatch[]> => {
+  return customFetch<EmployerMatch[]>(getListEmployerMatchesUrl(companyId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListEmployerMatchesQueryKey = (companyId: string) => {
+  return [`/api/employer/${companyId}/matches`] as const;
+};
+
+export const getListEmployerMatchesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listEmployerMatches>>,
+  TError = ErrorType<unknown>,
+>(
+  companyId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listEmployerMatches>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListEmployerMatchesQueryKey(companyId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listEmployerMatches>>
+  > = ({ signal }) =>
+    listEmployerMatches(companyId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!companyId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listEmployerMatches>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListEmployerMatchesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listEmployerMatches>>
+>;
+export type ListEmployerMatchesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Matches and applications belonging to this company
+ */
+
+export function useListEmployerMatches<
+  TData = Awaited<ReturnType<typeof listEmployerMatches>>,
+  TError = ErrorType<unknown>,
+>(
+  companyId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listEmployerMatches>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListEmployerMatchesQueryOptions(companyId, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

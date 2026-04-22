@@ -397,3 +397,147 @@ export const GetRecentActivityResponseItem = zod.object({
 export const GetRecentActivityResponse = zod.array(
   GetRecentActivityResponseItem,
 );
+
+/**
+ * @summary List companies that an employer can act as (demo)
+ */
+export const ListEmployerCompaniesResponseItem = zod.object({
+  id: zod.string(),
+  name: zod.string(),
+  logoColor: zod
+    .string()
+    .nullish()
+    .describe("Hex color used for logo placeholder"),
+  industry: zod.string().nullish(),
+  size: zod.string().nullish(),
+  about: zod.string().nullish(),
+});
+export const ListEmployerCompaniesResponse = zod.array(
+  ListEmployerCompaniesResponseItem,
+);
+
+/**
+ * @summary Pending candidates who right-swiped on this company's jobs
+ */
+export const GetEmployerFeedParams = zod.object({
+  companyId: zod.coerce.string(),
+});
+
+export const GetEmployerFeedResponseItem = zod.object({
+  swipeId: zod.string(),
+  candidate: zod.object({
+    id: zod.string(),
+    anonymousHandle: zod.string(),
+    headline: zod.string().nullish(),
+    location: zod.string().nullish(),
+    yearsExperience: zod.number().nullish(),
+    skills: zod.array(zod.string()),
+    desiredRole: zod.string().nullish(),
+    openToRemote: zod.boolean().nullish(),
+  }),
+  job: zod.object({
+    id: zod.string(),
+    title: zod.string(),
+    company: zod.object({
+      id: zod.string(),
+      name: zod.string(),
+      logoColor: zod
+        .string()
+        .nullish()
+        .describe("Hex color used for logo placeholder"),
+      industry: zod.string().nullish(),
+      size: zod.string().nullish(),
+      about: zod.string().nullish(),
+    }),
+    location: zod.string(),
+    remote: zod.boolean().optional(),
+    employmentType: zod.string().describe("e.g. Full-time, Contract"),
+    salaryMin: zod.number().nullish(),
+    salaryMax: zod.number().nullish(),
+    salaryCurrency: zod.string().nullish(),
+    description: zod.string().optional(),
+    responsibilities: zod.array(zod.string()).optional(),
+    skills: zod.array(zod.string()),
+    perks: zod.array(zod.string()).optional(),
+    postedAt: zod.coerce.date(),
+    matchScore: zod
+      .number()
+      .nullish()
+      .describe("0-100 estimated fit score for the current candidate"),
+  }),
+  matchScore: zod.number(),
+  swipedAt: zod.coerce.date(),
+});
+export const GetEmployerFeedResponse = zod.array(GetEmployerFeedResponseItem);
+
+/**
+ * @summary Accept (creates a match) or pass on a candidate
+ */
+export const EmployerDecideParams = zod.object({
+  companyId: zod.coerce.string(),
+  swipeId: zod.coerce.string(),
+});
+
+export const EmployerDecideBody = zod.object({
+  decision: zod.enum(["accept", "pass"]),
+});
+
+export const EmployerDecideResponse = zod.object({
+  matched: zod.boolean(),
+  matchId: zod.string().nullish(),
+});
+
+/**
+ * @summary Matches and applications belonging to this company
+ */
+export const ListEmployerMatchesParams = zod.object({
+  companyId: zod.coerce.string(),
+});
+
+export const ListEmployerMatchesResponseItem = zod.object({
+  id: zod.string(),
+  anonymousHandle: zod.string(),
+  candidateName: zod
+    .string()
+    .nullish()
+    .describe("Revealed only after candidate sends CV"),
+  candidateEmail: zod.string().nullish(),
+  cvText: zod.string().nullish(),
+  candidateSkills: zod.array(zod.string()).optional(),
+  job: zod.object({
+    id: zod.string(),
+    title: zod.string(),
+    company: zod.object({
+      id: zod.string(),
+      name: zod.string(),
+      logoColor: zod
+        .string()
+        .nullish()
+        .describe("Hex color used for logo placeholder"),
+      industry: zod.string().nullish(),
+      size: zod.string().nullish(),
+      about: zod.string().nullish(),
+    }),
+    location: zod.string(),
+    remote: zod.boolean().optional(),
+    employmentType: zod.string().describe("e.g. Full-time, Contract"),
+    salaryMin: zod.number().nullish(),
+    salaryMax: zod.number().nullish(),
+    salaryCurrency: zod.string().nullish(),
+    description: zod.string().optional(),
+    responsibilities: zod.array(zod.string()).optional(),
+    skills: zod.array(zod.string()),
+    perks: zod.array(zod.string()).optional(),
+    postedAt: zod.coerce.date(),
+    matchScore: zod
+      .number()
+      .nullish()
+      .describe("0-100 estimated fit score for the current candidate"),
+  }),
+  status: zod.enum(["pending_confirmation", "cv_sent", "dismissed"]),
+  cvShared: zod.boolean(),
+  createdAt: zod.coerce.date(),
+});
+export const ListEmployerMatchesResponse = zod.array(
+  ListEmployerMatchesResponseItem,
+);

@@ -29,29 +29,39 @@ router.post("/jobs/:jobId/swipe", async (req, res) => {
   }
 
   const swipeId = randomUUID();
+  let matched = false;
+  let serializedMatch: ReturnType<typeof serializeMatch> | null = null;
+  const score = computeMatchScore(row.job.skills ?? [], c.skills ?? []);
+
+  // Decide employer behaviour for right swipes:
+  // - small chance of an instant auto-match (simulating an employer who already liked the candidate)
+  // - otherwise the swipe goes into the employer review queue with status 'pending'
+  let employerDecision: string | null = null;
+  if (body.data.direction === "right") {
+    const employerProb = (row.job.employerInterest ?? 70) / 100;
+    const scoreBoost = score / 200;
+    const acceptProb = Math.min(0.6, employerProb * 0.4 + scoreBoost * 0.3);
+    if (Math.random() < acceptProb) {
+      matched = true;
+      employerDecision = "accepted";
+    } else {
+      employerDecision = "pending";
+    }
+  }
+
   try {
     await db.insert(swipesTable).values({
       id: swipeId,
       candidateId: c.id,
       jobId: params.data.jobId,
       direction: body.data.direction,
+      employerDecision,
     });
   } catch {
     // already swiped — ignore
   }
 
-  let matched = false;
-  let serializedMatch: ReturnType<typeof serializeMatch> | null = null;
-
   if (body.data.direction === "right") {
-    // Simulate employer interest using job.employerInterest probability,
-    // boosted by match score
-    const score = computeMatchScore(row.job.skills ?? [], c.skills ?? []);
-    const employerProb = (row.job.employerInterest ?? 70) / 100;
-    const scoreBoost = score / 200; // up to +0.5
-    const acceptProb = Math.min(0.95, employerProb * 0.7 + scoreBoost);
-    matched = Math.random() < acceptProb;
-
     if (matched) {
       const existing = await db
         .select()

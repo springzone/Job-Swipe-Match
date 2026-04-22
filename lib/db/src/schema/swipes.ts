@@ -9,6 +9,7 @@ export const swipesTable = pgTable(
     candidateId: text("candidate_id").notNull().references(() => candidatesTable.id, { onDelete: "cascade" }),
     jobId: text("job_id").notNull().references(() => jobsTable.id, { onDelete: "cascade" }),
     direction: text("direction").notNull(), // 'left' | 'right'
+    employerDecision: text("employer_decision"), // null | 'pending' | 'accepted' | 'passed'
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({

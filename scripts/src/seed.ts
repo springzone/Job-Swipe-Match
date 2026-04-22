@@ -1,4 +1,4 @@
-import { db, companiesTable, jobsTable } from "@workspace/db";
+import { db, companiesTable, jobsTable, candidatesTable, swipesTable } from "@workspace/db";
 import { sql } from "drizzle-orm";
 
 const companies = [
@@ -141,8 +141,17 @@ const jobs: SeedJob[] = [
   },
 ];
 
+const demoCandidates = [
+  { handle: "QuietFalcon214", headline: "Senior frontend engineer obsessed with motion + accessibility", location: "Zürich", years: 7, skills: ["React", "TypeScript", "CSS", "Accessibility", "Vite", "Figma"], desired: "Senior Frontend Engineer", remote: true, cv: "Built design systems at two Swiss scale-ups. Led the UI rewrite of a fintech dashboard used by 40k people." },
+  { handle: "BoldOtter427", headline: "Full-stack engineer, ex-FondueOS founding eng", location: "Bern", years: 5, skills: ["TypeScript", "React", "Node.js", "Postgres", "AWS"], desired: "Full-Stack Engineer", remote: true, cv: "5 years shipping product end-to-end. Comfortable across stack and on-call rotations." },
+  { handle: "BraveLynx611", headline: "ML engineer focused on retrieval and agents", location: "Zürich", years: 4, skills: ["Python", "PyTorch", "LLM", "Transformers", "NLP"], desired: "Applied ML Engineer", remote: false, cv: "MSc EPFL, then 4 years building applied LLM systems for European enterprises." },
+  { handle: "WittyHeron802", headline: "Data engineer, dbt enthusiast, mountain biker", location: "Zürich", years: 6, skills: ["Python", "SQL", "dbt", "Airflow", "Snowflake"], desired: "Data Engineer", remote: true, cv: "Built ELT platforms for energy and healthcare orgs. Care deeply about data contracts and observability." },
+  { handle: "NobleBison139", headline: "Designer-engineer hybrid", location: "Geneva", years: 8, skills: ["Figma", "React", "TypeScript", "Design Systems", "Prototyping"], desired: "Product Designer", remote: true, cv: "8 years across Geneva agencies and product teams. Brought design + code closer at Rhône Studio." },
+  { handle: "SilverWolf498", headline: "Backend engineer, low-latency JVM systems", location: "Geneva", years: 9, skills: ["Java", "Kotlin", "Postgres", "Kafka"], desired: "Backend Engineer", remote: false, cv: "Built order-flow systems at two private banks. Care about correctness under load." },
+];
+
 async function main() {
-  await db.execute(sql`TRUNCATE TABLE applications, matches, swipes, jobs, companies CASCADE`);
+  await db.execute(sql`TRUNCATE TABLE applications, matches, swipes, jobs, companies, candidates CASCADE`);
   await db.insert(companiesTable).values(companies);
   await db.insert(jobsTable).values(
     jobs.map((j) => ({
@@ -151,7 +160,51 @@ async function main() {
       postedAt: new Date(Date.now() - Math.random() * 1000 * 60 * 60 * 24 * 14),
     })),
   );
-  console.log(`Seeded ${companies.length} companies and ${jobs.length} jobs.`);
+
+  // Seed a few demo candidates and pending right-swipes so the employer view has something to do
+  const candidateRows = demoCandidates.map((d, i) => ({
+    id: `demo-c-${i + 1}`,
+    anonymousHandle: d.handle,
+    fullName: null,
+    email: null,
+    headline: d.headline,
+    location: d.location,
+    yearsExperience: d.years,
+    skills: d.skills,
+    cvText: d.cv,
+    desiredRole: d.desired,
+    openToRemote: d.remote,
+  }));
+  await db.insert(candidatesTable).values(candidateRows);
+
+  // Map each demo candidate to one or two jobs whose skills overlap, create pending swipes
+  const swipeRows: Array<{
+    id: string; candidateId: string; jobId: string; direction: string; employerDecision: string;
+  }> = [];
+  for (const c of candidateRows) {
+    const matchingJobs = jobs
+      .map((j) => ({
+        j,
+        overlap: j.skills.filter((s) => c.skills.map((x) => x.toLowerCase()).includes(s.toLowerCase())).length,
+      }))
+      .filter((x) => x.overlap > 0)
+      .sort((a, b) => b.overlap - a.overlap)
+      .slice(0, 2);
+    for (const { j } of matchingJobs) {
+      swipeRows.push({
+        id: `demo-s-${c.id}-${j.id}`,
+        candidateId: c.id,
+        jobId: j.id,
+        direction: "right",
+        employerDecision: "pending",
+      });
+    }
+  }
+  if (swipeRows.length > 0) {
+    await db.insert(swipesTable).values(swipeRows);
+  }
+
+  console.log(`Seeded ${companies.length} companies, ${jobs.length} jobs, ${candidateRows.length} demo candidates, ${swipeRows.length} pending swipes.`);
   process.exit(0);
 }
 

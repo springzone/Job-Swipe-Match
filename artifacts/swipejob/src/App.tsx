@@ -9,6 +9,7 @@ import MatchesPage from "@/pages/matches";
 import ApplicationsPage from "@/pages/applications";
 import ProfilePage from "@/pages/profile";
 import DashboardPage from "@/pages/dashboard";
+import EmployerPage from "@/pages/employer";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -29,6 +30,7 @@ function Router() {
         <Route path="/applications" component={ApplicationsPage} />
         <Route path="/dashboard" component={DashboardPage} />
         <Route path="/profile" component={ProfilePage} />
+        <Route path="/employer" component={EmployerPage} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

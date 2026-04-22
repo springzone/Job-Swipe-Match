@@ -14,6 +14,7 @@ tags:
   - name: matches
   - name: applications
   - name: stats
+  - name: employer
 paths:
   /healthz:
     get:
@@ -203,6 +204,84 @@ paths:
                 type: array
                 items: { $ref: "#/components/schemas/ActivityItem" }
 
+  /employer/companies:
+    get:
+      operationId: listEmployerCompanies
+      tags: [employer]
+      summary: List companies that an employer can act as (demo)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Company" }
+
+  /employer/{companyId}/feed:
+    get:
+      operationId: getEmployerFeed
+      tags: [employer]
+      summary: Pending candidates who right-swiped on this company's jobs
+      parameters:
+        - name: companyId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/EmployerFeedItem" }
+
+  /employer/{companyId}/swipes/{swipeId}:
+    post:
+      operationId: employerDecide
+      tags: [employer]
+      summary: Accept (creates a match) or pass on a candidate
+      parameters:
+        - name: companyId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: swipeId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EmployerDecisionInput" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EmployerDecisionResult" }
+
+  /employer/{companyId}/matches:
+    get:
+      operationId: listEmployerMatches
+      tags: [employer]
+      summary: Matches and applications belonging to this company
+      parameters:
+        - name: companyId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/EmployerMatch" }
+
 components:
   schemas:
     HealthStatus:
@@ -349,6 +428,63 @@ components:
             properties:
               skill: { type: string }
               count: { type: integer }
+
+    EmployerFeedItem:
+      type: object
+      required: [swipeId, candidate, job, swipedAt, matchScore]
+      properties:
+        swipeId: { type: string }
+        candidate:
+          type: object
+          required: [id, anonymousHandle, skills]
+          properties:
+            id: { type: string }
+            anonymousHandle: { type: string }
+            headline: { type: string, nullable: true }
+            location: { type: string, nullable: true }
+            yearsExperience: { type: integer, nullable: true }
+            skills:
+              type: array
+              items: { type: string }
+            desiredRole: { type: string, nullable: true }
+            openToRemote: { type: boolean, nullable: true }
+        job: { $ref: "#/components/schemas/Job" }
+        matchScore: { type: integer }
+        swipedAt: { type: string, format: date-time }
+
+    EmployerDecisionInput:
+      type: object
+      required: [decision]
+      properties:
+        decision:
+          type: string
+          enum: [accept, pass]
+
+    EmployerDecisionResult:
+      type: object
+      required: [matched]
+      properties:
+        matched: { type: boolean }
+        matchId: { type: string, nullable: true }
+
+    EmployerMatch:
+      type: object
+      required: [id, anonymousHandle, job, status, createdAt, cvShared]
+      properties:
+        id: { type: string }
+        anonymousHandle: { type: string }
+        candidateName: { type: string, nullable: true, description: "Revealed only after candidate sends CV" }
+        candidateEmail: { type: string, nullable: true }
+        cvText: { type: string, nullable: true }
+        candidateSkills:
+          type: array
+          items: { type: string }
+        job: { $ref: "#/components/schemas/Job" }
+        status:
+          type: string
+          enum: [pending_confirmation, cv_sent, dismissed]
+        cvShared: { type: boolean }
+        createdAt: { type: string, format: date-time }
 
     ActivityItem:
       type: object
