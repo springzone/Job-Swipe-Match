@@ -348,6 +348,7 @@ function PostJobDialog({ company, onClose }: { company: Company; onClose: () => 
     salaryMax: "",
     description: "",
     skills: "",
+    screeningQuestions: "",
   });
 
   const create = useCreateEmployerJob({
@@ -388,6 +389,10 @@ function PostJobDialog({ company, onClose }: { company: Company; onClose: () => 
           .map((s) => s.trim())
           .filter(Boolean),
         perks: [],
+        screeningQuestions: form.screeningQuestions
+          .split("\n")
+          .map((q) => q.trim())
+          .filter(Boolean),
       },
     });
   };
@@ -498,6 +503,23 @@ function PostJobDialog({ company, onClose }: { company: Company; onClose: () => 
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             data-testid="input-description"
           />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="job-questions">
+            Pre-screen questions{" "}
+            <span className="font-normal text-muted-foreground">(optional, one per line)</span>
+          </Label>
+          <Textarea
+            id="job-questions"
+            rows={3}
+            placeholder={"How many years with React?\nAre you eligible to work in Switzerland?"}
+            value={form.screeningQuestions}
+            onChange={(e) => setForm({ ...form, screeningQuestions: e.target.value })}
+            data-testid="input-screening-questions"
+          />
+          <p className="text-[11px] text-muted-foreground">
+            Candidates answer these before their CV is sent over.
+          </p>
         </div>
       </div>
       <DialogFooter className="gap-2">
@@ -821,6 +843,27 @@ function MatchesView({
                   >
                     {m.candidateEmail}
                   </a>
+                </div>
+              )}
+              {m.screeningAnswers && m.screeningAnswers.length > 0 && (
+                <div className="mt-2 space-y-2">
+                  <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    Screening answers
+                  </div>
+                  {m.screeningAnswers.map((qa, i) => (
+                    <div
+                      key={i}
+                      className="p-3 rounded-xl bg-muted/40 border border-border/50"
+                      data-testid={`screening-${m.id}-${i}`}
+                    >
+                      <div className="text-xs font-semibold text-foreground/80 mb-1">
+                        {qa.question}
+                      </div>
+                      <div className="text-xs text-foreground/90 whitespace-pre-wrap leading-relaxed">
+                        {qa.answer}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
               {m.cvText && (

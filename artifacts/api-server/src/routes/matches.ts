@@ -54,6 +54,24 @@ router.post("/matches/:matchId/send-cv", async (req, res) => {
     return;
   }
 
+  const questions: string[] = row.job.screeningQuestions ?? [];
+  const rawAnswers = Array.isArray(req.body?.screeningAnswers) ? req.body.screeningAnswers : [];
+  const answersByQ = new Map<string, string>();
+  for (const a of rawAnswers) {
+    if (a && typeof a.question === "string" && typeof a.answer === "string") {
+      answersByQ.set(a.question, a.answer);
+    }
+  }
+  const screeningAnswers = questions.map((q) => ({
+    question: q,
+    answer: (answersByQ.get(q) ?? "").trim(),
+  }));
+  const missing = screeningAnswers.find((a) => a.answer.length === 0);
+  if (questions.length > 0 && missing) {
+    res.status(400).json({ error: "missing_screening_answers" });
+    return;
+  }
+
   await db
     .update(matchesTable)
     .set({ status: "cv_sent" })
@@ -81,9 +99,17 @@ router.post("/matches/:matchId/send-cv", async (req, res) => {
         jobId: row.job.id,
         matchId: row.match.id,
         status: "submitted",
+        screeningAnswers,
       })
       .returning();
     app = created;
+  } else if (screeningAnswers.length > 0) {
+    const [updated] = await db
+      .update(applicationsTable)
+      .set({ screeningAnswers })
+      .where(eq(applicationsTable.id, app.id))
+      .returning();
+    app = updated;
   }
 
   res.json(

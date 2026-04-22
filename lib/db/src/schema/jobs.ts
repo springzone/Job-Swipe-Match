@@ -15,6 +15,7 @@ export const jobsTable = pgTable("jobs", {
   responsibilities: jsonb("responsibilities").$type<string[]>().notNull().default([]),
   skills: jsonb("skills").$type<string[]>().notNull().default([]),
   perks: jsonb("perks").$type<string[]>().notNull().default([]),
+  screeningQuestions: jsonb("screening_questions").$type<string[]>().notNull().default([]),
   // 0-100, controls likelihood of mutual match (simulated employer interest)
   employerInterest: integer("employer_interest").notNull().default(70),
   postedAt: timestamp("posted_at", { withTimezone: true }).notNull().defaultNow(),

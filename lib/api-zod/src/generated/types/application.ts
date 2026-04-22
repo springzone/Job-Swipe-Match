@@ -7,10 +7,12 @@
  */
 import type { ApplicationStatus } from "./applicationStatus";
 import type { Job } from "./job";
+import type { ScreeningAnswer } from "./screeningAnswer";
 
 export interface Application {
   id: string;
   job: Job;
   status: ApplicationStatus;
   sentAt: Date;
+  screeningAnswers: ScreeningAnswer[];
 }

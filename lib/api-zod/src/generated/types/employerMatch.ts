@@ -7,6 +7,7 @@
  */
 import type { EmployerMatchStatus } from "./employerMatchStatus";
 import type { Job } from "./job";
+import type { ScreeningAnswer } from "./screeningAnswer";
 
 export interface EmployerMatch {
   id: string;
@@ -16,6 +17,7 @@ export interface EmployerMatch {
   candidateEmail?: string | null;
   cvText?: string | null;
   candidateSkills?: string[];
+  screeningAnswers?: ScreeningAnswer[];
   job: Job;
   status: EmployerMatchStatus;
   cvShared: boolean;

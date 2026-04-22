@@ -98,6 +98,7 @@ export const GetJobFeedResponseItem = zod.object({
   responsibilities: zod.array(zod.string()).optional(),
   skills: zod.array(zod.string()),
   perks: zod.array(zod.string()).optional(),
+  screeningQuestions: zod.array(zod.string()).optional(),
   postedAt: zod.coerce.date(),
   matchScore: zod
     .number()
@@ -134,6 +135,7 @@ export const GetJobResponse = zod.object({
   responsibilities: zod.array(zod.string()).optional(),
   skills: zod.array(zod.string()),
   perks: zod.array(zod.string()).optional(),
+  screeningQuestions: zod.array(zod.string()).optional(),
   postedAt: zod.coerce.date(),
   matchScore: zod
     .number()
@@ -185,6 +187,7 @@ export const SwipeJobResponse = zod.object({
         responsibilities: zod.array(zod.string()).optional(),
         skills: zod.array(zod.string()),
         perks: zod.array(zod.string()).optional(),
+        screeningQuestions: zod.array(zod.string()).optional(),
         postedAt: zod.coerce.date(),
         matchScore: zod
           .number()
@@ -226,6 +229,7 @@ export const ListMatchesResponseItem = zod.object({
     responsibilities: zod.array(zod.string()).optional(),
     skills: zod.array(zod.string()),
     perks: zod.array(zod.string()).optional(),
+    screeningQuestions: zod.array(zod.string()).optional(),
     postedAt: zod.coerce.date(),
     matchScore: zod
       .number()
@@ -242,6 +246,17 @@ export const ListMatchesResponse = zod.array(ListMatchesResponseItem);
  */
 export const ConfirmSendCvParams = zod.object({
   matchId: zod.coerce.string(),
+});
+
+export const ConfirmSendCvBody = zod.object({
+  screeningAnswers: zod
+    .array(
+      zod.object({
+        question: zod.string(),
+        answer: zod.string(),
+      }),
+    )
+    .optional(),
 });
 
 export const ConfirmSendCvResponse = zod.object({
@@ -270,6 +285,7 @@ export const ConfirmSendCvResponse = zod.object({
     responsibilities: zod.array(zod.string()).optional(),
     skills: zod.array(zod.string()),
     perks: zod.array(zod.string()).optional(),
+    screeningQuestions: zod.array(zod.string()).optional(),
     postedAt: zod.coerce.date(),
     matchScore: zod
       .number()
@@ -278,6 +294,12 @@ export const ConfirmSendCvResponse = zod.object({
   }),
   status: zod.enum(["submitted", "viewed", "interview", "rejected"]),
   sentAt: zod.coerce.date(),
+  screeningAnswers: zod.array(
+    zod.object({
+      question: zod.string(),
+      answer: zod.string(),
+    }),
+  ),
 });
 
 /**
@@ -313,6 +335,7 @@ export const DismissMatchResponse = zod.object({
     responsibilities: zod.array(zod.string()).optional(),
     skills: zod.array(zod.string()),
     perks: zod.array(zod.string()).optional(),
+    screeningQuestions: zod.array(zod.string()).optional(),
     postedAt: zod.coerce.date(),
     matchScore: zod
       .number()
@@ -352,6 +375,7 @@ export const ListApplicationsResponseItem = zod.object({
     responsibilities: zod.array(zod.string()).optional(),
     skills: zod.array(zod.string()),
     perks: zod.array(zod.string()).optional(),
+    screeningQuestions: zod.array(zod.string()).optional(),
     postedAt: zod.coerce.date(),
     matchScore: zod
       .number()
@@ -360,6 +384,12 @@ export const ListApplicationsResponseItem = zod.object({
   }),
   status: zod.enum(["submitted", "viewed", "interview", "rejected"]),
   sentAt: zod.coerce.date(),
+  screeningAnswers: zod.array(
+    zod.object({
+      question: zod.string(),
+      answer: zod.string(),
+    }),
+  ),
 });
 export const ListApplicationsResponse = zod.array(ListApplicationsResponseItem);
 
@@ -459,6 +489,7 @@ export const GetEmployerFeedResponseItem = zod.object({
     responsibilities: zod.array(zod.string()).optional(),
     skills: zod.array(zod.string()),
     perks: zod.array(zod.string()).optional(),
+    screeningQuestions: zod.array(zod.string()).optional(),
     postedAt: zod.coerce.date(),
     matchScore: zod
       .number()
@@ -518,6 +549,7 @@ export const ListEmployerJobsResponseItem = zod.object({
   responsibilities: zod.array(zod.string()).optional(),
   skills: zod.array(zod.string()),
   perks: zod.array(zod.string()).optional(),
+  screeningQuestions: zod.array(zod.string()).optional(),
   postedAt: zod.coerce.date(),
   matchScore: zod
     .number()
@@ -549,6 +581,7 @@ export const CreateEmployerJobBody = zod.object({
   responsibilities: zod.array(zod.string()).optional(),
   skills: zod.array(zod.string()),
   perks: zod.array(zod.string()).optional(),
+  screeningQuestions: zod.array(zod.string()).optional(),
 });
 
 export const CreateEmployerJobResponse = zod.object({
@@ -575,6 +608,7 @@ export const CreateEmployerJobResponse = zod.object({
   responsibilities: zod.array(zod.string()).optional(),
   skills: zod.array(zod.string()),
   perks: zod.array(zod.string()).optional(),
+  screeningQuestions: zod.array(zod.string()).optional(),
   postedAt: zod.coerce.date(),
   matchScore: zod
     .number()
@@ -611,6 +645,14 @@ export const ListEmployerMatchesResponseItem = zod.object({
   candidateEmail: zod.string().nullish(),
   cvText: zod.string().nullish(),
   candidateSkills: zod.array(zod.string()).optional(),
+  screeningAnswers: zod
+    .array(
+      zod.object({
+        question: zod.string(),
+        answer: zod.string(),
+      }),
+    )
+    .optional(),
   job: zod.object({
     id: zod.string(),
     title: zod.string(),
@@ -635,6 +677,7 @@ export const ListEmployerMatchesResponseItem = zod.object({
     responsibilities: zod.array(zod.string()).optional(),
     skills: zod.array(zod.string()),
     perks: zod.array(zod.string()).optional(),
+    screeningQuestions: zod.array(zod.string()).optional(),
     postedAt: zod.coerce.date(),
     matchScore: zod
       .number()

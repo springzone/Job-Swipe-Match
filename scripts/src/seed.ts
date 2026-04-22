@@ -28,6 +28,7 @@ type SeedJob = {
   skills: string[];
   perks: string[];
   employerInterest: number;
+  screeningQuestions?: string[];
 };
 
 const jobs: SeedJob[] = [
@@ -39,6 +40,10 @@ const jobs: SeedJob[] = [
     skills: ["React", "TypeScript", "CSS", "Accessibility", "Vite"],
     perks: ["Hybrid", "Half-fare travel pass", "Learning budget"],
     employerInterest: 80,
+    screeningQuestions: [
+      "How many years of professional React experience do you have?",
+      "Tell us about a UI shipping moment you're proud of.",
+    ],
   },
   {
     id: "j-2", companyId: "c-helvetia-labs", title: "Applied ML Engineer", location: "Zürich",
@@ -57,6 +62,10 @@ const jobs: SeedJob[] = [
     skills: ["Java", "Kotlin", "Postgres", "Kafka"],
     perks: ["13th month", "Pension scheme", "Subsidised meals"],
     employerInterest: 60,
+    screeningQuestions: [
+      "Do you currently hold a permit to work in Switzerland (or are you an EU/EFTA citizen)?",
+      "Briefly describe a low-latency system you've built or maintained.",
+    ],
   },
   {
     id: "j-4", companyId: "c-fondue-os", title: "Full-Stack Engineer", location: "Bern",
@@ -156,6 +165,7 @@ async function main() {
   await db.insert(jobsTable).values(
     jobs.map((j) => ({
       ...j,
+      screeningQuestions: j.screeningQuestions ?? [],
       salaryCurrency: "CHF",
       postedAt: new Date(Date.now() - Math.random() * 1000 * 60 * 60 * 24 * 14),
     })),

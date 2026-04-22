@@ -7,8 +7,11 @@ import {
   User,
   Building2,
   ArrowLeft,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/components/theme-provider";
 
 const candidateNav = [
   { href: "/", icon: Briefcase, label: "Swipe" },
@@ -21,6 +24,7 @@ const candidateNav = [
 export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const isEmployer = location.startsWith("/employer");
+  const { theme, toggle } = useTheme();
 
   return (
     <div className="flex justify-center min-h-[100dvh] bg-muted/30">
@@ -34,23 +38,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {isEmployer ? "SwipeJob — Employer" : "SwipeJob"}
             </span>
           </div>
-          {isEmployer ? (
-            <Link
-              href="/"
-              className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
-              data-testid="link-back-candidate"
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={toggle}
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+              className="w-7 h-7 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover-elevate"
+              data-testid="button-theme-toggle"
             >
-              <ArrowLeft className="w-3.5 h-3.5" /> Candidate
-            </Link>
-          ) : (
-            <Link
-              href="/employer"
-              className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-full bg-muted hover-elevate text-foreground"
-              data-testid="link-employer"
-            >
-              <Building2 className="w-3.5 h-3.5" /> Employer mode
-            </Link>
-          )}
+              {theme === "dark" ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+            {isEmployer ? (
+              <Link
+                href="/"
+                className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+                data-testid="link-back-candidate"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" /> Candidate
+              </Link>
+            ) : (
+              <Link
+                href="/employer"
+                className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-full bg-muted hover-elevate text-foreground"
+                data-testid="link-employer"
+              >
+                <Building2 className="w-3.5 h-3.5" /> Employer mode
+              </Link>
+            )}
+          </div>
         </header>
 
         <main className={cn("flex-1 overflow-y-auto", !isEmployer && "pb-16")}>

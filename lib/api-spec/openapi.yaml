@@ -140,6 +140,11 @@ paths:
           in: path
           required: true
           schema: { type: string }
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ConfirmSendCvInput" }
       responses:
         "200":
           description: Application submitted
@@ -422,6 +427,9 @@ components:
         perks:
           type: array
           items: { type: string }
+        screeningQuestions:
+          type: array
+          items: { type: string }
         postedAt: { type: string, format: date-time }
         matchScore:
           type: integer
@@ -464,7 +472,7 @@ components:
 
     Application:
       type: object
-      required: [id, job, status, sentAt]
+      required: [id, job, status, sentAt, screeningAnswers]
       properties:
         id: { type: string }
         job: { $ref: "#/components/schemas/Job" }
@@ -472,6 +480,23 @@ components:
           type: string
           enum: [submitted, viewed, interview, rejected]
         sentAt: { type: string, format: date-time }
+        screeningAnswers:
+          type: array
+          items: { $ref: "#/components/schemas/ScreeningAnswer" }
+
+    ScreeningAnswer:
+      type: object
+      required: [question, answer]
+      properties:
+        question: { type: string }
+        answer: { type: string }
+
+    ConfirmSendCvInput:
+      type: object
+      properties:
+        screeningAnswers:
+          type: array
+          items: { $ref: "#/components/schemas/ScreeningAnswer" }
 
     StatsSummary:
       type: object
@@ -512,6 +537,9 @@ components:
           type: array
           items: { type: string }
         perks:
+          type: array
+          items: { type: string }
+        screeningQuestions:
           type: array
           items: { type: string }
 
@@ -565,6 +593,9 @@ components:
         candidateSkills:
           type: array
           items: { type: string }
+        screeningAnswers:
+          type: array
+          items: { $ref: "#/components/schemas/ScreeningAnswer" }
         job: { $ref: "#/components/schemas/Job" }
         status:
           type: string

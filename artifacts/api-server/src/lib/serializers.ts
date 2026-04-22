@@ -26,6 +26,7 @@ export function serializeJob(j: Job, company: Company, matchScore?: number) {
     responsibilities: j.responsibilities ?? [],
     skills: j.skills ?? [],
     perks: j.perks ?? [],
+    screeningQuestions: j.screeningQuestions ?? [],
     postedAt: j.postedAt.toISOString(),
     matchScore: matchScore ?? null,
   };
@@ -62,6 +63,7 @@ export function serializeApplication(a: Application, j: Job, company: Company, s
     id: a.id,
     job: serializeJob(j, company, score),
     status: a.status as "submitted" | "viewed" | "interview" | "rejected",
+    screeningAnswers: a.screeningAnswers ?? [],
     sentAt: a.sentAt.toISOString(),
   };
 }

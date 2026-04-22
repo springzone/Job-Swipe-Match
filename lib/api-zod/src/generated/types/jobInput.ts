@@ -21,4 +21,5 @@ export interface JobInput {
   responsibilities?: string[];
   skills: string[];
   perks?: string[];
+  screeningQuestions?: string[];
 }

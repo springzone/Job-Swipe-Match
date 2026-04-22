@@ -7,6 +7,7 @@ import {
   swipesTable,
   matchesTable,
   candidatesTable,
+  applicationsTable,
 } from "@workspace/db";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { serializeCompany, serializeJob, computeMatchScore } from "../lib/serializers";
@@ -62,6 +63,9 @@ router.post("/employer/:companyId/jobs", async (req, res) => {
       responsibilities: Array.isArray(b.responsibilities) ? b.responsibilities : [],
       skills: Array.isArray(b.skills) ? b.skills : [],
       perks: Array.isArray(b.perks) ? b.perks : [],
+      screeningQuestions: Array.isArray(b.screeningQuestions)
+        ? b.screeningQuestions.map(String).filter((s: string) => s.trim().length > 0)
+        : [],
       employerInterest: 65,
       postedAt: new Date(),
     })
@@ -232,6 +236,13 @@ router.get("/employer/:companyId/matches", async (req, res) => {
   const cands = await db.select().from(candidatesTable).where(inArray(candidatesTable.id, candidateIds));
   const candById = new Map(cands.map((c) => [c.id, c]));
 
+  const matchIds = matches.map((m) => m.id);
+  const apps = await db
+    .select()
+    .from(applicationsTable)
+    .where(inArray(applicationsTable.matchId, matchIds));
+  const appByMatchId = new Map(apps.map((a) => [a.matchId, a]));
+
   const out = matches
     .map((m) => {
       const job = jobsById.get(m.jobId);
@@ -239,6 +250,7 @@ router.get("/employer/:companyId/matches", async (req, res) => {
       if (!job || !cand) return null;
       const cvShared = m.status === "cv_sent";
       const score = computeMatchScore(job.skills ?? [], cand.skills ?? []);
+      const app = appByMatchId.get(m.id);
       return {
         id: m.id,
         anonymousHandle: cand.anonymousHandle,
@@ -246,6 +258,7 @@ router.get("/employer/:companyId/matches", async (req, res) => {
         candidateEmail: cvShared ? cand.email : null,
         cvText: cvShared ? cand.cvText : null,
         candidateSkills: cand.skills ?? [],
+        screeningAnswers: cvShared ? app?.screeningAnswers ?? [] : [],
         job: serializeJob(job, company, score),
         status: m.status as "pending_confirmation" | "cv_sent" | "dismissed",
         cvShared,

@@ -22,6 +22,7 @@ export interface Job {
   responsibilities?: string[];
   skills: string[];
   perks?: string[];
+  screeningQuestions?: string[];
   postedAt: Date;
   /** 0-100 estimated fit score for the current candidate */
   matchScore?: number | null;

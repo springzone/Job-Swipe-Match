@@ -64,6 +64,7 @@ export interface Job {
   responsibilities?: string[];
   skills: string[];
   perks?: string[];
+  screeningQuestions?: string[];
   postedAt: string;
   /** 0-100 estimated fit score for the current candidate */
   matchScore?: number | null;
@@ -122,11 +123,21 @@ export const ApplicationStatus = {
   rejected: "rejected",
 } as const;
 
+export interface ScreeningAnswer {
+  question: string;
+  answer: string;
+}
+
 export interface Application {
   id: string;
   job: Job;
   status: ApplicationStatus;
   sentAt: string;
+  screeningAnswers: ScreeningAnswer[];
+}
+
+export interface ConfirmSendCvInput {
+  screeningAnswers?: ScreeningAnswer[];
 }
 
 export type StatsSummaryTopSkillsInDemandItem = {
@@ -159,6 +170,7 @@ export interface JobInput {
   responsibilities?: string[];
   skills: string[];
   perks?: string[];
+  screeningQuestions?: string[];
 }
 
 export type EmployerFeedItemCandidate = {
@@ -214,6 +226,7 @@ export interface EmployerMatch {
   candidateEmail?: string | null;
   cvText?: string | null;
   candidateSkills?: string[];
+  screeningAnswers?: ScreeningAnswer[];
   job: Job;
   status: EmployerMatchStatus;
   cvShared: boolean;

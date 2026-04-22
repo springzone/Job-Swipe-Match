@@ -1,7 +1,9 @@
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, jsonb } from "drizzle-orm/pg-core";
 import { candidatesTable } from "./candidates";
 import { jobsTable } from "./jobs";
 import { matchesTable } from "./matches";
+
+export type ScreeningAnswer = { question: string; answer: string };
 
 export const applicationsTable = pgTable("applications", {
   id: text("id").primaryKey(),
@@ -9,6 +11,7 @@ export const applicationsTable = pgTable("applications", {
   jobId: text("job_id").notNull().references(() => jobsTable.id, { onDelete: "cascade" }),
   matchId: text("match_id").references(() => matchesTable.id, { onDelete: "set null" }),
   status: text("status").notNull().default("submitted"), // submitted | viewed | interview | rejected
+  screeningAnswers: jsonb("screening_answers").$type<ScreeningAnswer[]>().notNull().default([]),
   sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

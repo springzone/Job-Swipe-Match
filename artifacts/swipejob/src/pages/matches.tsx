@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { 
   useListMatches, 
   useGetMe, 
@@ -26,6 +26,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 
 export default function MatchesPage() {
   const { data: matches, isLoading } = useListMatches();
@@ -33,7 +35,12 @@ export default function MatchesPage() {
   const queryClient = useQueryClient();
   
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
-  
+  const [answers, setAnswers] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    setAnswers({});
+  }, [selectedMatchId]);
+
   const confirmCv = useConfirmSendCv({
     mutation: {
       onSuccess: () => {
@@ -72,6 +79,25 @@ export default function MatchesPage() {
   }
 
   const selectedMatch = matches?.find(m => m.id === selectedMatchId);
+  const screeningQuestions = selectedMatch?.job.screeningQuestions ?? [];
+  const allAnswered = screeningQuestions.every((q) => (answers[q] ?? "").trim().length > 0);
+
+  const handleSendCv = () => {
+    if (!selectedMatch) return;
+    if (screeningQuestions.length > 0 && !allAnswered) {
+      toast.error("Please answer all screening questions first.");
+      return;
+    }
+    confirmCv.mutate({
+      matchId: selectedMatch.id,
+      data: {
+        screeningAnswers: screeningQuestions.map((q) => ({
+          question: q,
+          answer: (answers[q] ?? "").trim(),
+        })),
+      },
+    });
+  };
 
   return (
     <div className="p-6 pb-24">
@@ -182,6 +208,31 @@ export default function MatchesPage() {
           
           <ScrollArea className="flex-1 p-6">
             <div className="space-y-6">
+              {screeningQuestions.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase mb-3">
+                    A few quick questions
+                  </h4>
+                  <div className="space-y-3">
+                    {screeningQuestions.map((q, i) => (
+                      <div key={i} className="space-y-1.5">
+                        <Label htmlFor={`q-${i}`} className="text-sm font-medium leading-snug">
+                          {q}
+                        </Label>
+                        <Textarea
+                          id={`q-${i}`}
+                          rows={2}
+                          placeholder="Your answer…"
+                          value={answers[q] ?? ""}
+                          onChange={(e) => setAnswers({ ...answers, [q]: e.target.value })}
+                          data-testid={`input-screening-${i}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <h4 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase mb-3">Profile Info</h4>
                 <div className="bg-card border border-border/50 rounded-xl p-4 space-y-3 shadow-sm">
@@ -230,8 +281,9 @@ export default function MatchesPage() {
             </Button>
             <Button 
               className="w-full sm:w-auto shadow-md"
-              onClick={() => selectedMatch && confirmCv.mutate({ matchId: selectedMatch.id })}
-              disabled={confirmCv.isPending}
+              onClick={handleSendCv}
+              disabled={confirmCv.isPending || (screeningQuestions.length > 0 && !allAnswered)}
+              data-testid="button-confirm-send-cv"
             >
               {confirmCv.isPending ? "Sending..." : "Confirm & Send CV"}
               <Send className="w-4 h-4 ml-2" />

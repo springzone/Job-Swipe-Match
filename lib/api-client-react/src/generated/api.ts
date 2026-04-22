@@ -22,6 +22,7 @@ import type {
   Candidate,
   CandidateUpdate,
   Company,
+  ConfirmSendCvInput,
   DeleteEmployerJob200,
   EmployerDecisionInput,
   EmployerDecisionResult,
@@ -601,11 +602,14 @@ export const getConfirmSendCvUrl = (matchId: string) => {
 
 export const confirmSendCv = async (
   matchId: string,
+  confirmSendCvInput?: ConfirmSendCvInput,
   options?: RequestInit,
 ): Promise<Application> => {
   return customFetch<Application>(getConfirmSendCvUrl(matchId), {
     ...options,
     method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(confirmSendCvInput),
   });
 };
 
@@ -616,14 +620,14 @@ export const getConfirmSendCvMutationOptions = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof confirmSendCv>>,
     TError,
-    { matchId: string },
+    { matchId: string; data: BodyType<ConfirmSendCvInput> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationOptions<
   Awaited<ReturnType<typeof confirmSendCv>>,
   TError,
-  { matchId: string },
+  { matchId: string; data: BodyType<ConfirmSendCvInput> },
   TContext
 > => {
   const mutationKey = ["confirmSendCv"];
@@ -637,11 +641,11 @@ export const getConfirmSendCvMutationOptions = <
 
   const mutationFn: MutationFunction<
     Awaited<ReturnType<typeof confirmSendCv>>,
-    { matchId: string }
+    { matchId: string; data: BodyType<ConfirmSendCvInput> }
   > = (props) => {
-    const { matchId } = props ?? {};
+    const { matchId, data } = props ?? {};
 
-    return confirmSendCv(matchId, requestOptions);
+    return confirmSendCv(matchId, data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
@@ -650,7 +654,7 @@ export const getConfirmSendCvMutationOptions = <
 export type ConfirmSendCvMutationResult = NonNullable<
   Awaited<ReturnType<typeof confirmSendCv>>
 >;
-
+export type ConfirmSendCvMutationBody = BodyType<ConfirmSendCvInput>;
 export type ConfirmSendCvMutationError = ErrorType<unknown>;
 
 /**
@@ -663,14 +667,14 @@ export const useConfirmSendCv = <
   mutation?: UseMutationOptions<
     Awaited<ReturnType<typeof confirmSendCv>>,
     TError,
-    { matchId: string },
+    { matchId: string; data: BodyType<ConfirmSendCvInput> },
     TContext
   >;
   request?: SecondParameter<typeof customFetch>;
 }): UseMutationResult<
   Awaited<ReturnType<typeof confirmSendCv>>,
   TError,
-  { matchId: string },
+  { matchId: string; data: BodyType<ConfirmSendCvInput> },
   TContext
 > => {
   return useMutation(getConfirmSendCvMutationOptions(options));
