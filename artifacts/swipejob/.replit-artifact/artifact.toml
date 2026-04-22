@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "SwipeJob"
+version = "1.0.0"
+id = "artifacts/swipejob"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21228
+
+[services.development]
+run = "pnpm --filter @workspace/swipejob run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/swipejob", "run", "build" ]
+publicDir = "artifacts/swipejob/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21228"
+BASE_PATH = "/"

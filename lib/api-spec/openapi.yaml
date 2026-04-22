@@ -1,36 +1,363 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: SwipeJob API — Tinder-style job matching
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: profile
+  - name: jobs
+  - name: swipes
+  - name: matches
+  - name: applications
+  - name: stats
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
           content:
             application/json:
+              schema: { $ref: "#/components/schemas/HealthStatus" }
+
+  /me:
+    get:
+      operationId: getMe
+      tags: [profile]
+      summary: Get current candidate profile (creates anonymous one if missing)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Candidate" }
+    put:
+      operationId: updateMe
+      tags: [profile]
+      summary: Update candidate profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CandidateUpdate" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Candidate" }
+
+  /jobs/feed:
+    get:
+      operationId: getJobFeed
+      tags: [jobs]
+      summary: List jobs the candidate hasn't swiped on yet
+      parameters:
+        - name: location
+          in: query
+          required: false
+          schema: { type: string }
+        - name: remote
+          in: query
+          required: false
+          schema: { type: boolean }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
               schema:
-                $ref: "#/components/schemas/HealthStatus"
+                type: array
+                items: { $ref: "#/components/schemas/Job" }
+
+  /jobs/{jobId}:
+    get:
+      operationId: getJob
+      tags: [jobs]
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Job" }
+
+  /jobs/{jobId}/swipe:
+    post:
+      operationId: swipeJob
+      tags: [swipes]
+      summary: Record a swipe (right=interested, left=pass)
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SwipeInput" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SwipeResult" }
+
+  /matches:
+    get:
+      operationId: listMatches
+      tags: [matches]
+      summary: List of mutual interest matches (employer accepted candidate)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Match" }
+
+  /matches/{matchId}/send-cv:
+    post:
+      operationId: confirmSendCv
+      tags: [matches]
+      summary: Confirm sending CV after a match
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Application submitted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Application" }
+
+  /matches/{matchId}/dismiss:
+    post:
+      operationId: dismissMatch
+      tags: [matches]
+      summary: Dismiss a match without sending CV
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Dismissed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Match" }
+
+  /applications:
+    get:
+      operationId: listApplications
+      tags: [applications]
+      summary: List of CV applications sent to companies
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Application" }
+
+  /stats/summary:
+    get:
+      operationId: getStatsSummary
+      tags: [stats]
+      summary: Candidate dashboard summary
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/StatsSummary" }
+
+  /stats/activity:
+    get:
+      operationId: getRecentActivity
+      tags: [stats]
+      summary: Recent activity feed
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/ActivityItem" }
+
 components:
   schemas:
     HealthStatus:
       type: object
       properties:
+        status: { type: string }
+      required: [status]
+
+    Candidate:
+      type: object
+      required: [id, anonymousHandle, skills, createdAt]
+      properties:
+        id: { type: string }
+        anonymousHandle: { type: string, description: "Anonymized handle shown to employers before match" }
+        fullName: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+        headline: { type: string, nullable: true, description: "Short professional summary" }
+        location: { type: string, nullable: true }
+        yearsExperience: { type: integer, nullable: true }
+        skills:
+          type: array
+          items: { type: string }
+        cvText: { type: string, nullable: true, description: "Plain text CV / resume content" }
+        desiredRole: { type: string, nullable: true }
+        openToRemote: { type: boolean, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    CandidateUpdate:
+      type: object
+      properties:
+        fullName: { type: string, nullable: true }
+        email: { type: string, nullable: true }
+        headline: { type: string, nullable: true }
+        location: { type: string, nullable: true }
+        yearsExperience: { type: integer, nullable: true }
+        skills:
+          type: array
+          items: { type: string }
+        cvText: { type: string, nullable: true }
+        desiredRole: { type: string, nullable: true }
+        openToRemote: { type: boolean, nullable: true }
+
+    Company:
+      type: object
+      required: [id, name]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        logoColor: { type: string, nullable: true, description: "Hex color used for logo placeholder" }
+        industry: { type: string, nullable: true }
+        size: { type: string, nullable: true }
+        about: { type: string, nullable: true }
+
+    Job:
+      type: object
+      required: [id, title, company, location, employmentType, skills, postedAt]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        company: { $ref: "#/components/schemas/Company" }
+        location: { type: string }
+        remote: { type: boolean }
+        employmentType: { type: string, description: "e.g. Full-time, Contract" }
+        salaryMin: { type: integer, nullable: true }
+        salaryMax: { type: integer, nullable: true }
+        salaryCurrency: { type: string, nullable: true }
+        description: { type: string }
+        responsibilities:
+          type: array
+          items: { type: string }
+        skills:
+          type: array
+          items: { type: string }
+        perks:
+          type: array
+          items: { type: string }
+        postedAt: { type: string, format: date-time }
+        matchScore:
+          type: integer
+          nullable: true
+          description: "0-100 estimated fit score for the current candidate"
+
+    SwipeInput:
+      type: object
+      required: [direction]
+      properties:
+        direction:
+          type: string
+          enum: [left, right]
+
+    SwipeResult:
+      type: object
+      required: [swipeId, direction, matched]
+      properties:
+        swipeId: { type: string }
+        direction:
+          type: string
+          enum: [left, right]
+        matched:
+          type: boolean
+          description: "true if employer also expressed interest, creating a match"
+        match:
+          $ref: "#/components/schemas/Match"
+          nullable: true
+
+    Match:
+      type: object
+      required: [id, job, status, createdAt]
+      properties:
+        id: { type: string }
+        job: { $ref: "#/components/schemas/Job" }
         status:
           type: string
-      required:
-        - status
+          enum: [pending_confirmation, cv_sent, dismissed]
+        createdAt: { type: string, format: date-time }
 
+    Application:
+      type: object
+      required: [id, job, status, sentAt]
+      properties:
+        id: { type: string }
+        job: { $ref: "#/components/schemas/Job" }
+        status:
+          type: string
+          enum: [submitted, viewed, interview, rejected]
+        sentAt: { type: string, format: date-time }
+
+    StatsSummary:
+      type: object
+      required: [totalSwipes, rightSwipes, matches, applicationsSent, profileCompleteness]
+      properties:
+        totalSwipes: { type: integer }
+        rightSwipes: { type: integer }
+        matches: { type: integer }
+        applicationsSent: { type: integer }
+        profileCompleteness:
+          type: integer
+          description: "0-100 percent of profile fields filled in"
+        topSkillsInDemand:
+          type: array
+          items:
+            type: object
+            required: [skill, count]
+            properties:
+              skill: { type: string }
+              count: { type: integer }
+
+    ActivityItem:
+      type: object
+      required: [id, kind, message, at]
+      properties:
+        id: { type: string }
+        kind:
+          type: string
+          enum: [swipe_right, match, cv_sent, status_change]
+        message: { type: string }
+        jobId: { type: string, nullable: true }
+        at: { type: string, format: date-time }
