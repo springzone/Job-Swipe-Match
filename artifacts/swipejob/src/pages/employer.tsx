@@ -30,6 +30,7 @@ import {
   getGetJobFeedQueryKey,
   type Company,
   type EmployerFeedItem,
+  type EmployerMatch,
   type Job,
 } from "@workspace/api-client-react";
 import { Input } from "@/components/ui/input";
@@ -773,7 +774,7 @@ function MatchesView({
   matches,
   loading,
 }: {
-  matches: ReturnType<typeof useListEmployerMatches>["data"];
+  matches: EmployerMatch[] | undefined;
   loading: boolean;
 }) {
   if (loading) {
@@ -850,7 +851,7 @@ function MatchesView({
                   <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
                     Screening answers
                   </div>
-                  {m.screeningAnswers.map((qa, i) => (
+                  {m.screeningAnswers.map((qa: { question: string; answer: string }, i: number) => (
                     <div
                       key={i}
                       className="p-3 rounded-xl bg-muted/40 border border-border/50"
