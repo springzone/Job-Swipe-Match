@@ -18,6 +18,68 @@ router.get("/employer/companies", async (_req, res) => {
   res.json(rows.map(serializeCompany));
 });
 
+router.get("/employer/:companyId/jobs", async (req, res) => {
+  const companyId = req.params.companyId;
+  const company = (await db.select().from(companiesTable).where(eq(companiesTable.id, companyId)).limit(1))[0];
+  if (!company) {
+    res.status(404).json({ error: "company_not_found" });
+    return;
+  }
+  const rows = await db
+    .select()
+    .from(jobsTable)
+    .where(eq(jobsTable.companyId, companyId))
+    .orderBy(desc(jobsTable.postedAt));
+  res.json(rows.map((j) => serializeJob(j, company)));
+});
+
+router.post("/employer/:companyId/jobs", async (req, res) => {
+  const companyId = req.params.companyId;
+  const company = (await db.select().from(companiesTable).where(eq(companiesTable.id, companyId)).limit(1))[0];
+  if (!company) {
+    res.status(404).json({ error: "company_not_found" });
+    return;
+  }
+  const b = req.body ?? {};
+  if (!b.title || !b.location || !b.employmentType || !b.description) {
+    res.status(400).json({ error: "missing_fields" });
+    return;
+  }
+  const id = `j-${randomUUID().slice(0, 8)}`;
+  const [row] = await db
+    .insert(jobsTable)
+    .values({
+      id,
+      companyId,
+      title: String(b.title),
+      location: String(b.location),
+      remote: Boolean(b.remote),
+      employmentType: String(b.employmentType),
+      salaryMin: b.salaryMin ? Number(b.salaryMin) : null,
+      salaryMax: b.salaryMax ? Number(b.salaryMax) : null,
+      salaryCurrency: b.salaryCurrency ?? "CHF",
+      description: String(b.description),
+      responsibilities: Array.isArray(b.responsibilities) ? b.responsibilities : [],
+      skills: Array.isArray(b.skills) ? b.skills : [],
+      perks: Array.isArray(b.perks) ? b.perks : [],
+      employerInterest: 65,
+      postedAt: new Date(),
+    })
+    .returning();
+  res.json(serializeJob(row, company));
+});
+
+router.delete("/employer/:companyId/jobs/:jobId", async (req, res) => {
+  const { companyId, jobId } = req.params;
+  const job = (await db.select().from(jobsTable).where(eq(jobsTable.id, jobId)).limit(1))[0];
+  if (!job || job.companyId !== companyId) {
+    res.status(404).json({ error: "not_found" });
+    return;
+  }
+  await db.delete(jobsTable).where(eq(jobsTable.id, jobId));
+  res.json({ ok: true });
+});
+
 router.get("/employer/:companyId/feed", async (req, res) => {
   const companyId = req.params.companyId;
   const company = (await db.select().from(companiesTable).where(eq(companiesTable.id, companyId)).limit(1))[0];

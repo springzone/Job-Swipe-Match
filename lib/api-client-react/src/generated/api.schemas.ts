@@ -144,6 +144,23 @@ export interface StatsSummary {
   topSkillsInDemand?: StatsSummaryTopSkillsInDemandItem[];
 }
 
+export interface JobInput {
+  /** @minLength 2 */
+  title: string;
+  /** @minLength 1 */
+  location: string;
+  remote?: boolean;
+  employmentType: string;
+  salaryMin?: number | null;
+  salaryMax?: number | null;
+  salaryCurrency?: string | null;
+  /** @minLength 10 */
+  description: string;
+  responsibilities?: string[];
+  skills: string[];
+  perks?: string[];
+}
+
 export type EmployerFeedItemCandidate = {
   id: string;
   anonymousHandle: string;
@@ -224,4 +241,8 @@ export interface ActivityItem {
 export type GetJobFeedParams = {
   location?: string;
   remote?: boolean;
+};
+
+export type DeleteEmployerJob200 = {
+  ok: boolean;
 };

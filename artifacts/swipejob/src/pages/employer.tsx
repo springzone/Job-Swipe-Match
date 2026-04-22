@@ -11,17 +11,47 @@ import {
   Users,
   X,
   ChevronDown,
+  Briefcase,
+  Plus,
+  Trash2,
+  Loader2,
 } from "lucide-react";
 import {
   useListEmployerCompanies,
   useGetEmployerFeed,
   useEmployerDecide,
   useListEmployerMatches,
+  useListEmployerJobs,
+  useCreateEmployerJob,
+  useDeleteEmployerJob,
   getGetEmployerFeedQueryKey,
   getListEmployerMatchesQueryKey,
+  getListEmployerJobsQueryKey,
+  getGetJobFeedQueryKey,
   type Company,
   type EmployerFeedItem,
+  type Job,
 } from "@workspace/api-client-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -135,11 +165,12 @@ function CompanySwitcher({
 }
 
 function EmployerWorkspace({ company }: { company: Company }) {
-  const [tab, setTab] = useState<"queue" | "matches">("queue");
+  const [tab, setTab] = useState<"queue" | "matches" | "jobs">("queue");
   const queryClient = useQueryClient();
 
   const { data: feed, isLoading: feedLoading } = useGetEmployerFeed(company.id);
   const { data: matches, isLoading: matchesLoading } = useListEmployerMatches(company.id);
+  const { data: jobs, isLoading: jobsLoading } = useListEmployerJobs(company.id);
 
   const decide = useEmployerDecide({
     mutation: {
@@ -159,30 +190,26 @@ function EmployerWorkspace({ company }: { company: Company }) {
     decide.mutate({ companyId: company.id, swipeId, data: { decision } });
   };
 
+  const tabBtn = (k: typeof tab, Icon: any, label: string, count?: number) => (
+    <button
+      onClick={() => setTab(k)}
+      className={`text-xs font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 transition-colors ${
+        tab === k ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
+      }`}
+      data-testid={`tab-${k}`}
+    >
+      <Icon className="w-3.5 h-3.5" />
+      {label} {typeof count === "number" && count > 0 ? `(${count})` : ""}
+    </button>
+  );
+
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       <div className="px-4 pt-2 pb-3">
-        <div className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-muted">
-          <button
-            onClick={() => setTab("queue")}
-            className={`text-xs font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 transition-colors ${
-              tab === "queue" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
-            }`}
-            data-testid="tab-queue"
-          >
-            <Inbox className="w-3.5 h-3.5" />
-            Queue {feed && feed.length > 0 ? `(${feed.length})` : ""}
-          </button>
-          <button
-            onClick={() => setTab("matches")}
-            className={`text-xs font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 transition-colors ${
-              tab === "matches" ? "bg-background shadow-sm text-foreground" : "text-muted-foreground"
-            }`}
-            data-testid="tab-matches"
-          >
-            <Users className="w-3.5 h-3.5" />
-            Hires {matches && matches.length > 0 ? `(${matches.length})` : ""}
-          </button>
+        <div className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-muted">
+          {tabBtn("queue", Inbox, "Queue", feed?.length)}
+          {tabBtn("jobs", Briefcase, "Jobs", jobs?.length)}
+          {tabBtn("matches", Users, "Hires", matches?.length)}
         </div>
       </div>
 
@@ -193,8 +220,296 @@ function EmployerWorkspace({ company }: { company: Company }) {
         {tab === "matches" && (
           <MatchesView matches={matches} loading={matchesLoading} />
         )}
+        {tab === "jobs" && (
+          <JobsView company={company} jobs={jobs} loading={jobsLoading} />
+        )}
       </div>
     </div>
+  );
+}
+
+function JobsView({
+  company,
+  jobs,
+  loading,
+}: {
+  company: Company;
+  jobs: Job[] | undefined;
+  loading: boolean;
+}) {
+  const queryClient = useQueryClient();
+  const [open, setOpen] = useState(false);
+
+  const deleteJob = useDeleteEmployerJob({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListEmployerJobsQueryKey(company.id) });
+        queryClient.invalidateQueries({ queryKey: getGetJobFeedQueryKey() });
+        toast.success("Job removed");
+      },
+    },
+  });
+
+  return (
+    <div className="p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold">Open roles</h3>
+          <p className="text-xs text-muted-foreground">
+            What candidates see in their swipe deck.
+          </p>
+        </div>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm" className="rounded-full" data-testid="button-post-job">
+              <Plus className="w-4 h-4 mr-1" /> Post job
+            </Button>
+          </DialogTrigger>
+          <PostJobDialog
+            company={company}
+            onClose={() => setOpen(false)}
+          />
+        </Dialog>
+      </div>
+
+      {loading ? (
+        Array.from({ length: 2 }).map((_, i) => (
+          <Skeleton key={i} className="h-20 rounded-2xl" />
+        ))
+      ) : !jobs || jobs.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+            <Briefcase className="w-7 h-7 text-muted-foreground" />
+          </div>
+          <h2 className="text-base font-bold mb-1">No open roles yet</h2>
+          <p className="text-sm text-muted-foreground text-balance">
+            Post your first job to start getting candidates in the queue.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {jobs.map((j) => (
+            <div
+              key={j.id}
+              className="p-3 rounded-2xl border border-border bg-card hover-elevate flex items-start justify-between gap-3"
+              data-testid={`job-${j.id}`}
+            >
+              <div className="min-w-0">
+                <div className="font-semibold text-sm leading-tight truncate">{j.title}</div>
+                <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                  <MapPin className="w-3 h-3" />
+                  {j.location}
+                  {j.remote && " · Remote"}
+                  <span className="opacity-50">·</span>
+                  {j.employmentType}
+                </div>
+                {j.skills.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {j.skills.slice(0, 5).map((s) => (
+                      <span
+                        key={s}
+                        className="px-2 py-0.5 bg-muted/60 rounded-md text-[10px] font-medium"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="text-muted-foreground hover:text-destructive flex-shrink-0"
+                onClick={() => {
+                  if (confirm(`Remove "${j.title}"? Candidates won't see it anymore.`)) {
+                    deleteJob.mutate({ companyId: company.id, jobId: j.id });
+                  }
+                }}
+                data-testid={`button-delete-${j.id}`}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PostJobDialog({ company, onClose }: { company: Company; onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const [form, setForm] = useState({
+    title: "",
+    location: "Zürich",
+    remote: true,
+    employmentType: "Full-time",
+    salaryMin: "",
+    salaryMax: "",
+    description: "",
+    skills: "",
+  });
+
+  const create = useCreateEmployerJob({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListEmployerJobsQueryKey(company.id) });
+        queryClient.invalidateQueries({ queryKey: getGetJobFeedQueryKey() });
+        toast.success("Job posted", {
+          description: "Candidates will start seeing it in their swipe deck.",
+        });
+        onClose();
+      },
+      onError: () => {
+        toast.error("Could not post job", { description: "Please check the required fields." });
+      },
+    },
+  });
+
+  const submit = () => {
+    if (!form.title.trim() || !form.location.trim() || form.description.trim().length < 10) {
+      toast.error("Fill in title, location, and a description (≥10 characters).");
+      return;
+    }
+    create.mutate({
+      companyId: company.id,
+      data: {
+        title: form.title.trim(),
+        location: form.location.trim(),
+        remote: form.remote,
+        employmentType: form.employmentType,
+        salaryMin: form.salaryMin ? Number(form.salaryMin) : null,
+        salaryMax: form.salaryMax ? Number(form.salaryMax) : null,
+        salaryCurrency: "CHF",
+        description: form.description.trim(),
+        responsibilities: [],
+        skills: form.skills
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        perks: [],
+      },
+    });
+  };
+
+  return (
+    <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle>Post a new role</DialogTitle>
+        <DialogDescription>
+          Acting as <span className="font-medium text-foreground">{company.name}</span>. Candidates will
+          see this in their swipe deck immediately.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="space-y-4 py-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="job-title">Title</Label>
+          <Input
+            id="job-title"
+            placeholder="Senior Frontend Engineer"
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+            data-testid="input-job-title"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="job-location">Location</Label>
+            <Input
+              id="job-location"
+              placeholder="Zürich"
+              value={form.location}
+              onChange={(e) => setForm({ ...form, location: e.target.value })}
+              data-testid="input-job-location"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="job-type">Type</Label>
+            <Select
+              value={form.employmentType}
+              onValueChange={(v) => setForm({ ...form, employmentType: v })}
+            >
+              <SelectTrigger id="job-type" data-testid="select-job-type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Full-time">Full-time</SelectItem>
+                <SelectItem value="Part-time">Part-time</SelectItem>
+                <SelectItem value="Contract">Contract</SelectItem>
+                <SelectItem value="Internship">Internship</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div className="flex items-center justify-between p-3 rounded-xl bg-muted/40">
+          <div>
+            <div className="text-sm font-medium">Open to remote</div>
+            <div className="text-xs text-muted-foreground">Show this role to remote-friendly candidates.</div>
+          </div>
+          <Switch
+            checked={form.remote}
+            onCheckedChange={(v) => setForm({ ...form, remote: v })}
+            data-testid="switch-remote"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="job-salary-min">Salary min (CHF)</Label>
+            <Input
+              id="job-salary-min"
+              type="number"
+              inputMode="numeric"
+              placeholder="100000"
+              value={form.salaryMin}
+              onChange={(e) => setForm({ ...form, salaryMin: e.target.value })}
+              data-testid="input-salary-min"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="job-salary-max">Salary max (CHF)</Label>
+            <Input
+              id="job-salary-max"
+              type="number"
+              inputMode="numeric"
+              placeholder="140000"
+              value={form.salaryMax}
+              onChange={(e) => setForm({ ...form, salaryMax: e.target.value })}
+              data-testid="input-salary-max"
+            />
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="job-skills">Skills (comma-separated)</Label>
+          <Input
+            id="job-skills"
+            placeholder="React, TypeScript, Postgres"
+            value={form.skills}
+            onChange={(e) => setForm({ ...form, skills: e.target.value })}
+            data-testid="input-skills"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="job-description">Description</Label>
+          <Textarea
+            id="job-description"
+            rows={4}
+            placeholder="What the role is about, who you're looking for, what you'll be working on…"
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            data-testid="input-description"
+          />
+        </div>
+      </div>
+      <DialogFooter className="gap-2">
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button onClick={submit} disabled={create.isPending} data-testid="button-submit-job">
+          {create.isPending && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
+          Post role
+        </Button>
+      </DialogFooter>
+    </DialogContent>
   );
 }
 

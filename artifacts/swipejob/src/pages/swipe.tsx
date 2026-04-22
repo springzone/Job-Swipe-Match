@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useGetJobFeed, useSwipeJob, getGetJobFeedQueryKey, getListMatchesQueryKey, getGetStatsSummaryQueryKey, getGetRecentActivityQueryKey, SwipeInputDirection } from "@workspace/api-client-react";
 import { motion, useAnimation, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { X, Heart, MapPin, Building, Briefcase, RotateCcw, AlertCircle } from "lucide-react";
@@ -84,10 +84,12 @@ export default function SwipePage() {
     });
   };
 
+  const topJob = activeJobs[0];
+  const triggerRef = { current: null as null | ((dir: 'left' | 'right') => void) };
+
   return (
-    <div className="relative h-full w-full flex flex-col items-center justify-center overflow-hidden touch-none p-4 pb-24 pt-8">
-      {/* Undo Button */}
-      <div className="absolute top-4 right-4 z-10">
+    <div className="relative h-full w-full flex flex-col items-center touch-none p-4 pt-2 gap-4">
+      <div className="self-end">
         <Button 
           variant="secondary" 
           size="icon" 
@@ -98,6 +100,7 @@ export default function SwipePage() {
             }
           }}
           disabled={currentIndex === 0}
+          data-testid="button-undo"
         >
           <RotateCcw className="w-4 h-4" />
         </Button>
@@ -111,9 +114,33 @@ export default function SwipePage() {
             isTop={idx === 2}
             onSwipe={(dir) => handleSwipe(dir, job.id)}
             index={idx}
+            registerTrigger={idx === 2 ? (fn) => { triggerRef.current = fn; } : undefined}
           />
         ))}
       </div>
+
+      {topJob && (
+        <div className="flex justify-center items-center gap-6 pb-2 pt-2">
+          <Button 
+            size="icon" 
+            variant="outline" 
+            className="w-14 h-14 rounded-full border-2 border-border shadow-lg bg-background text-destructive hover:bg-destructive/10 hover:border-destructive transition-transform hover:scale-105 active:scale-95"
+            onClick={() => triggerRef.current?.('left')}
+            data-testid="button-pass"
+          >
+            <X className="w-7 h-7" />
+          </Button>
+          
+          <Button 
+            size="icon" 
+            className="w-16 h-16 rounded-full shadow-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-transform hover:scale-105 active:scale-95"
+            onClick={() => triggerRef.current?.('right')}
+            data-testid="button-like"
+          >
+            <Heart className="w-8 h-8 fill-current" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -122,12 +149,14 @@ function JobCard({
   job, 
   isTop, 
   onSwipe, 
-  index 
+  index,
+  registerTrigger,
 }: { 
   job: any; 
   isTop: boolean; 
   onSwipe: (dir: 'left' | 'right') => void;
   index: number;
+  registerTrigger?: (fn: (dir: 'left' | 'right') => void) => void;
 }) {
   const x = useMotionValue(0);
   const controls = useAnimation();
@@ -162,6 +191,11 @@ function JobCard({
     const sign = dir === 'right' ? 1 : -1;
     controls.start({ x: sign * 500, opacity: 0, transition: { duration: 0.3 } }).then(() => onSwipe(dir));
   };
+
+  useEffect(() => {
+    if (isTop && registerTrigger) registerTrigger(triggerSwipe);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isTop]);
 
   return (
     <>
@@ -254,30 +288,8 @@ function JobCard({
         </div>
         
         {/* Gradient fade out for scrollable content */}
-        <div className="absolute bottom-20 left-0 right-0 h-16 bg-gradient-to-t from-card to-transparent pointer-events-none z-30" />
+        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-card to-transparent pointer-events-none z-30" />
       </motion.div>
-
-      {/* Action Buttons (only interactive for top card) */}
-      {isTop && (
-        <div className="absolute bottom-[-1rem] left-0 right-0 flex justify-center items-center gap-6 z-40 pointer-events-none">
-          <Button 
-            size="icon" 
-            variant="outline" 
-            className="w-16 h-16 rounded-full border-2 border-border shadow-lg bg-background text-destructive hover:bg-destructive/10 hover:border-destructive pointer-events-auto transition-transform hover:scale-105 active:scale-95"
-            onClick={() => triggerSwipe('left')}
-          >
-            <X className="w-8 h-8" />
-          </Button>
-          
-          <Button 
-            size="icon" 
-            className="w-20 h-20 rounded-full shadow-xl bg-primary text-primary-foreground hover:bg-primary/90 pointer-events-auto transition-transform hover:scale-105 active:scale-95"
-            onClick={() => triggerSwipe('right')}
-          >
-            <Heart className="w-10 h-10 fill-current" />
-          </Button>
-        </div>
-      )}
     </>
   );
 }

@@ -488,6 +488,113 @@ export const EmployerDecideResponse = zod.object({
 });
 
 /**
+ * @summary List jobs posted by this company
+ */
+export const ListEmployerJobsParams = zod.object({
+  companyId: zod.coerce.string(),
+});
+
+export const ListEmployerJobsResponseItem = zod.object({
+  id: zod.string(),
+  title: zod.string(),
+  company: zod.object({
+    id: zod.string(),
+    name: zod.string(),
+    logoColor: zod
+      .string()
+      .nullish()
+      .describe("Hex color used for logo placeholder"),
+    industry: zod.string().nullish(),
+    size: zod.string().nullish(),
+    about: zod.string().nullish(),
+  }),
+  location: zod.string(),
+  remote: zod.boolean().optional(),
+  employmentType: zod.string().describe("e.g. Full-time, Contract"),
+  salaryMin: zod.number().nullish(),
+  salaryMax: zod.number().nullish(),
+  salaryCurrency: zod.string().nullish(),
+  description: zod.string().optional(),
+  responsibilities: zod.array(zod.string()).optional(),
+  skills: zod.array(zod.string()),
+  perks: zod.array(zod.string()).optional(),
+  postedAt: zod.coerce.date(),
+  matchScore: zod
+    .number()
+    .nullish()
+    .describe("0-100 estimated fit score for the current candidate"),
+});
+export const ListEmployerJobsResponse = zod.array(ListEmployerJobsResponseItem);
+
+/**
+ * @summary Post a new job opening for this company
+ */
+export const CreateEmployerJobParams = zod.object({
+  companyId: zod.coerce.string(),
+});
+
+export const createEmployerJobBodyTitleMin = 2;
+
+export const createEmployerJobBodyDescriptionMin = 10;
+
+export const CreateEmployerJobBody = zod.object({
+  title: zod.string().min(createEmployerJobBodyTitleMin),
+  location: zod.string().min(1),
+  remote: zod.boolean().optional(),
+  employmentType: zod.string(),
+  salaryMin: zod.number().nullish(),
+  salaryMax: zod.number().nullish(),
+  salaryCurrency: zod.string().nullish(),
+  description: zod.string().min(createEmployerJobBodyDescriptionMin),
+  responsibilities: zod.array(zod.string()).optional(),
+  skills: zod.array(zod.string()),
+  perks: zod.array(zod.string()).optional(),
+});
+
+export const CreateEmployerJobResponse = zod.object({
+  id: zod.string(),
+  title: zod.string(),
+  company: zod.object({
+    id: zod.string(),
+    name: zod.string(),
+    logoColor: zod
+      .string()
+      .nullish()
+      .describe("Hex color used for logo placeholder"),
+    industry: zod.string().nullish(),
+    size: zod.string().nullish(),
+    about: zod.string().nullish(),
+  }),
+  location: zod.string(),
+  remote: zod.boolean().optional(),
+  employmentType: zod.string().describe("e.g. Full-time, Contract"),
+  salaryMin: zod.number().nullish(),
+  salaryMax: zod.number().nullish(),
+  salaryCurrency: zod.string().nullish(),
+  description: zod.string().optional(),
+  responsibilities: zod.array(zod.string()).optional(),
+  skills: zod.array(zod.string()),
+  perks: zod.array(zod.string()).optional(),
+  postedAt: zod.coerce.date(),
+  matchScore: zod
+    .number()
+    .nullish()
+    .describe("0-100 estimated fit score for the current candidate"),
+});
+
+/**
+ * @summary Remove a job opening
+ */
+export const DeleteEmployerJobParams = zod.object({
+  companyId: zod.coerce.string(),
+  jobId: zod.coerce.string(),
+});
+
+export const DeleteEmployerJobResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
  * @summary Matches and applications belonging to this company
  */
 export const ListEmployerMatchesParams = zod.object({

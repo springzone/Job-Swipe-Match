@@ -263,6 +263,70 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/EmployerDecisionResult" }
 
+  /employer/{companyId}/jobs:
+    get:
+      operationId: listEmployerJobs
+      tags: [employer]
+      summary: List jobs posted by this company
+      parameters:
+        - name: companyId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Job" }
+    post:
+      operationId: createEmployerJob
+      tags: [employer]
+      summary: Post a new job opening for this company
+      parameters:
+        - name: companyId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/JobInput" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Job" }
+
+  /employer/{companyId}/jobs/{jobId}:
+    delete:
+      operationId: deleteEmployerJob
+      tags: [employer]
+      summary: Remove a job opening
+      parameters:
+        - name: companyId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: jobId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok: { type: boolean }
+
   /employer/{companyId}/matches:
     get:
       operationId: listEmployerMatches
@@ -428,6 +492,28 @@ components:
             properties:
               skill: { type: string }
               count: { type: integer }
+
+    JobInput:
+      type: object
+      required: [title, location, employmentType, description, skills]
+      properties:
+        title: { type: string, minLength: 2 }
+        location: { type: string, minLength: 1 }
+        remote: { type: boolean }
+        employmentType: { type: string }
+        salaryMin: { type: integer, nullable: true }
+        salaryMax: { type: integer, nullable: true }
+        salaryCurrency: { type: string, nullable: true }
+        description: { type: string, minLength: 10 }
+        responsibilities:
+          type: array
+          items: { type: string }
+        skills:
+          type: array
+          items: { type: string }
+        perks:
+          type: array
+          items: { type: string }
 
     EmployerFeedItem:
       type: object
