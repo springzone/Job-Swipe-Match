@@ -40,6 +40,10 @@ router.get("/matches/:matchId/messages", async (req, res) => {
     .from(messagesTable)
     .where(eq(messagesTable.matchId, match.id))
     .orderBy(asc(messagesTable.createdAt));
+  await db
+    .update(matchesTable)
+    .set({ candidateLastReadAt: new Date() })
+    .where(eq(matchesTable.id, match.id));
   res.json(rows.map(serializeMessage));
 });
 
@@ -74,6 +78,10 @@ router.post("/matches/:matchId/messages", async (req, res) => {
       body: body.slice(0, 2000),
     })
     .returning();
+  await db
+    .update(matchesTable)
+    .set({ candidateLastReadAt: new Date() })
+    .where(eq(matchesTable.id, match.id));
   res.json(serializeMessage(created));
 });
 

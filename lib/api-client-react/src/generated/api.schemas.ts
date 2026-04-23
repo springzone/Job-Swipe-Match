@@ -103,6 +103,8 @@ export interface Match {
   job: Job;
   status: MatchStatus;
   createdAt: string;
+  /** @minimum 0 */
+  unreadCount: number;
 }
 
 export interface SwipeResult {
@@ -254,6 +256,8 @@ export interface EmployerMatch {
   status: EmployerMatchStatus;
   cvShared: boolean;
   createdAt: string;
+  /** @minimum 0 */
+  unreadCount: number;
 }
 
 export type ActivityItemKind =

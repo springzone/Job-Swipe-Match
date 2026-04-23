@@ -10,7 +10,7 @@ import {
   applicationsTable,
   messagesTable,
 } from "@workspace/db";
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import { serializeCompany, serializeJob, computeMatchScore } from "../lib/serializers";
 
 const router: IRouter = Router();
@@ -244,6 +244,23 @@ router.get("/employer/:companyId/matches", async (req, res) => {
     .where(inArray(applicationsTable.matchId, matchIds));
   const appByMatchId = new Map(apps.map((a) => [a.matchId, a]));
 
+  const unreadRows = await db
+    .select({
+      matchId: messagesTable.matchId,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(messagesTable)
+    .innerJoin(matchesTable, eq(matchesTable.id, messagesTable.matchId))
+    .where(
+      and(
+        inArray(messagesTable.matchId, matchIds),
+        eq(messagesTable.sender, "candidate"),
+        gt(messagesTable.createdAt, matchesTable.employerLastReadAt),
+      ),
+    )
+    .groupBy(messagesTable.matchId);
+  const unreadByMatch = new Map(unreadRows.map((r) => [r.matchId, Number(r.count)]));
+
   const out = matches
     .map((m) => {
       const job = jobsById.get(m.jobId);
@@ -264,6 +281,7 @@ router.get("/employer/:companyId/matches", async (req, res) => {
         status: m.status as "pending_confirmation" | "cv_sent" | "dismissed",
         cvShared,
         createdAt: m.createdAt.toISOString(),
+        unreadCount: unreadByMatch.get(m.id) ?? 0,
       };
     })
     .filter(Boolean);
@@ -290,6 +308,10 @@ router.get("/employer/:companyId/matches/:matchId/messages", async (req, res) =>
     .from(messagesTable)
     .where(eq(messagesTable.matchId, match.id))
     .orderBy(asc(messagesTable.createdAt));
+  await db
+    .update(matchesTable)
+    .set({ employerLastReadAt: new Date() })
+    .where(eq(matchesTable.id, match.id));
   res.json(
     rows.map((m) => ({
       id: m.id,
@@ -325,6 +347,10 @@ router.post("/employer/:companyId/matches/:matchId/messages", async (req, res) =
       body: body.slice(0, 2000),
     })
     .returning();
+  await db
+    .update(matchesTable)
+    .set({ employerLastReadAt: new Date() })
+    .where(eq(matchesTable.id, match.id));
   res.json({
     id: created.id,
     matchId: created.matchId,

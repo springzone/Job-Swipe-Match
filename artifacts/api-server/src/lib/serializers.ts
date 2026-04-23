@@ -49,12 +49,13 @@ export function serializeCandidate(c: Candidate) {
   };
 }
 
-export function serializeMatch(m: Match, j: Job, company: Company, score?: number) {
+export function serializeMatch(m: Match, j: Job, company: Company, score?: number, unreadCount = 0) {
   return {
     id: m.id,
     job: serializeJob(j, company, score),
     status: m.status as "pending_confirmation" | "cv_sent" | "dismissed",
     createdAt: m.createdAt.toISOString(),
+    unreadCount,
   };
 }
 

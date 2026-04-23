@@ -6,8 +6,9 @@ import {
   jobsTable,
   companiesTable,
   applicationsTable,
+  messagesTable,
 } from "@workspace/db";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, gt, sql } from "drizzle-orm";
 import { ConfirmSendCvParams, DismissMatchParams } from "@workspace/api-zod";
 import { getOrCreateCandidate } from "../lib/candidate";
 import {
@@ -28,9 +29,34 @@ router.get("/matches", async (req, res) => {
     .where(eq(matchesTable.candidateId, c.id))
     .orderBy(desc(matchesTable.createdAt));
 
+  const unreadRows = rows.length
+    ? await db
+        .select({
+          matchId: messagesTable.matchId,
+          count: sql<number>`count(*)::int`,
+        })
+        .from(messagesTable)
+        .innerJoin(matchesTable, eq(matchesTable.id, messagesTable.matchId))
+        .where(
+          and(
+            eq(matchesTable.candidateId, c.id),
+            eq(messagesTable.sender, "employer"),
+            gt(messagesTable.createdAt, matchesTable.candidateLastReadAt),
+          ),
+        )
+        .groupBy(messagesTable.matchId)
+    : [];
+  const unreadByMatch = new Map(unreadRows.map((r) => [r.matchId, Number(r.count)]));
+
   res.json(
     rows.map((r) =>
-      serializeMatch(r.match, r.job, r.company, computeMatchScore(r.job.skills ?? [], c.skills ?? [])),
+      serializeMatch(
+        r.match,
+        r.job,
+        r.company,
+        computeMatchScore(r.job.skills ?? [], c.skills ?? []),
+        unreadByMatch.get(r.match.id) ?? 0,
+      ),
     ),
   );
 });

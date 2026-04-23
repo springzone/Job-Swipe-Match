@@ -190,12 +190,20 @@ export default function MatchesPage() {
                     </div>
                     <Button
                       variant="outline"
-                      className="w-full"
+                      className="w-full relative"
                       onClick={() => setChatMatchId(match.id)}
                       data-testid={`button-chat-${match.id}`}
                     >
                       <MessageSquare className="w-4 h-4 mr-2" />
                       Message {match.job.company.name}
+                      {match.unreadCount > 0 && (
+                        <span
+                          className="ml-2 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold"
+                          data-testid={`badge-unread-${match.id}`}
+                        >
+                          {match.unreadCount}
+                        </span>
+                      )}
                     </Button>
                   </div>
                 ) : (

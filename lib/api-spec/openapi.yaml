@@ -547,7 +547,7 @@ components:
 
     Match:
       type: object
-      required: [id, job, status, createdAt]
+      required: [id, job, status, createdAt, unreadCount]
       properties:
         id: { type: string }
         job: { $ref: "#/components/schemas/Job" }
@@ -555,6 +555,7 @@ components:
           type: string
           enum: [pending_confirmation, cv_sent, dismissed]
         createdAt: { type: string, format: date-time }
+        unreadCount: { type: integer, minimum: 0 }
 
     Application:
       type: object
@@ -687,7 +688,7 @@ components:
 
     EmployerMatch:
       type: object
-      required: [id, anonymousHandle, job, status, createdAt, cvShared]
+      required: [id, anonymousHandle, job, status, createdAt, cvShared, unreadCount]
       properties:
         id: { type: string }
         anonymousHandle: { type: string }
@@ -706,6 +707,7 @@ components:
           enum: [pending_confirmation, cv_sent, dismissed]
         cvShared: { type: boolean }
         createdAt: { type: string, format: date-time }
+        unreadCount: { type: integer, minimum: 0 }
 
     ActivityItem:
       type: object

@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
+import { useListMatches } from "@workspace/api-client-react";
 
 const candidateNav = [
   { href: "/", icon: Briefcase, label: "Swipe" },
@@ -25,6 +26,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const isEmployer = location.startsWith("/employer");
   const { theme, toggle } = useTheme();
+  const { data: matchData } = useListMatches({
+    query: { enabled: !isEmployer, refetchInterval: 8000 },
+  });
+  const unreadByPath: Record<string, number> = {
+    "/matches": (matchData ?? []).reduce((sum, m) => sum + (m.unreadCount ?? 0), 0),
+  };
 
   return (
     <div className="flex justify-center min-h-[100dvh] bg-muted/30">
@@ -78,6 +85,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               {candidateNav.map((item) => {
                 const isActive = location === item.href;
                 const Icon = item.icon;
+                const unread = unreadByPath[item.href] ?? 0;
                 return (
                   <Link
                     key={item.href}
@@ -92,10 +100,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
                     {isActive && (
                       <div className="absolute top-0 w-8 h-1 bg-primary rounded-b-full" />
                     )}
-                    <Icon
-                      className="w-5 h-5"
-                      strokeWidth={isActive ? 2.5 : 2}
-                    />
+                    <div className="relative">
+                      <Icon
+                        className="w-5 h-5"
+                        strokeWidth={isActive ? 2.5 : 2}
+                      />
+                      {unread > 0 && (
+                        <span
+                          className="absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center ring-2 ring-background"
+                          data-testid={`nav-badge-${item.href.replace("/", "") || "home"}`}
+                        >
+                          {unread > 9 ? "9+" : unread}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[10px] font-medium tracking-tight">
                       {item.label}
                     </span>

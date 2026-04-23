@@ -13,4 +13,6 @@ export interface Match {
   job: Job;
   status: MatchStatus;
   createdAt: Date;
+  /** @minimum 0 */
+  unreadCount: number;
 }

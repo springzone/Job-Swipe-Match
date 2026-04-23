@@ -882,12 +882,20 @@ function MatchesView({
               <Button
                 variant="outline"
                 size="sm"
-                className="w-full mt-2"
+                className="w-full mt-2 relative"
                 onClick={() => setChatMatchId(m.id)}
                 data-testid={`button-chat-${m.id}`}
               >
                 <MessageSquare className="w-4 h-4 mr-2" />
                 Message {m.candidateName ?? m.anonymousHandle}
+                {m.unreadCount > 0 && (
+                  <span
+                    className="ml-2 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold"
+                    data-testid={`badge-unread-${m.id}`}
+                  >
+                    {m.unreadCount}
+                  </span>
+                )}
               </Button>
             </div>
           ) : (

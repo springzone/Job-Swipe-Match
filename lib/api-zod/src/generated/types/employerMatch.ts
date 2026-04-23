@@ -22,4 +22,6 @@ export interface EmployerMatch {
   status: EmployerMatchStatus;
   cvShared: boolean;
   createdAt: Date;
+  /** @minimum 0 */
+  unreadCount: number;
 }

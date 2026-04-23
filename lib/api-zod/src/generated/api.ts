@@ -154,6 +154,8 @@ export const SwipeJobBody = zod.object({
   direction: zod.enum(["left", "right"]),
 });
 
+export const swipeJobResponseMatchUnreadCountMin = 0;
+
 export const SwipeJobResponse = zod.object({
   swipeId: zod.string(),
   direction: zod.enum(["left", "right"]),
@@ -196,6 +198,7 @@ export const SwipeJobResponse = zod.object({
       }),
       status: zod.enum(["pending_confirmation", "cv_sent", "dismissed"]),
       createdAt: zod.coerce.date(),
+      unreadCount: zod.number().min(swipeJobResponseMatchUnreadCountMin),
     })
     .nullish(),
 });
@@ -203,6 +206,8 @@ export const SwipeJobResponse = zod.object({
 /**
  * @summary List of mutual interest matches (employer accepted candidate)
  */
+export const listMatchesResponseUnreadCountMin = 0;
+
 export const ListMatchesResponseItem = zod.object({
   id: zod.string(),
   job: zod.object({
@@ -238,6 +243,7 @@ export const ListMatchesResponseItem = zod.object({
   }),
   status: zod.enum(["pending_confirmation", "cv_sent", "dismissed"]),
   createdAt: zod.coerce.date(),
+  unreadCount: zod.number().min(listMatchesResponseUnreadCountMin),
 });
 export const ListMatchesResponse = zod.array(ListMatchesResponseItem);
 
@@ -389,6 +395,8 @@ export const DismissMatchParams = zod.object({
   matchId: zod.coerce.string(),
 });
 
+export const dismissMatchResponseUnreadCountMin = 0;
+
 export const DismissMatchResponse = zod.object({
   id: zod.string(),
   job: zod.object({
@@ -424,6 +432,7 @@ export const DismissMatchResponse = zod.object({
   }),
   status: zod.enum(["pending_confirmation", "cv_sent", "dismissed"]),
   createdAt: zod.coerce.date(),
+  unreadCount: zod.number().min(dismissMatchResponseUnreadCountMin),
 });
 
 /**
@@ -715,6 +724,8 @@ export const ListEmployerMatchesParams = zod.object({
   companyId: zod.coerce.string(),
 });
 
+export const listEmployerMatchesResponseUnreadCountMin = 0;
+
 export const ListEmployerMatchesResponseItem = zod.object({
   id: zod.string(),
   anonymousHandle: zod.string(),
@@ -767,6 +778,7 @@ export const ListEmployerMatchesResponseItem = zod.object({
   status: zod.enum(["pending_confirmation", "cv_sent", "dismissed"]),
   cvShared: zod.boolean(),
   createdAt: zod.coerce.date(),
+  unreadCount: zod.number().min(listEmployerMatchesResponseUnreadCountMin),
 });
 export const ListEmployerMatchesResponse = zod.array(
   ListEmployerMatchesResponseItem,
