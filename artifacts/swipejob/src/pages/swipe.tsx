@@ -163,7 +163,6 @@ export default function SwipePage() {
           <Button 
             size="icon" 
             variant="outline" 
-            disabled={isMutating}
             className="w-14 h-14 rounded-full border-2 border-border shadow-lg bg-background text-destructive hover:bg-destructive/10 hover:border-destructive transition-transform hover:scale-105 active:scale-95"
             onClick={() => triggerRef.current?.('left')}
             data-testid="button-pass"
@@ -177,7 +176,6 @@ export default function SwipePage() {
           
           <Button 
             size="icon" 
-            disabled={isMutating}
             className="w-16 h-16 rounded-full shadow-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-transform hover:scale-105 active:scale-95"
             onClick={() => triggerRef.current?.('right')}
             data-testid="button-like"
