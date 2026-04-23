@@ -13,6 +13,8 @@ import { Loader2 } from "lucide-react";
 export default function SwipePage() {
   const { data: jobs, isLoading, error } = useGetJobFeed();
   const queryClient = useQueryClient();
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const triggerRef = useRef<null | ((dir: 'left' | 'right') => void)>(null);
   
   const swipeJob = useSwipeJob({
     mutation: {
@@ -36,8 +38,10 @@ export default function SwipePage() {
   });
 
   const isMutating = swipeJob.isPending;
+  const activeJobs = jobs?.slice(currentIndex) || [];
+  const topJob = activeJobs[0];
 
-  const [currentIndex, setCurrentIndex] = useState(0);
+  
 
   if (isLoading) {
   return (
@@ -96,7 +100,7 @@ export default function SwipePage() {
     );
   }
 
-  const activeJobs = jobs?.slice(currentIndex) || [];
+  
 
   if (activeJobs.length === 0) {
     return (
@@ -123,8 +127,8 @@ export default function SwipePage() {
     });
   };
 
-  const topJob = activeJobs[0];
-const triggerRef = useRef<null | ((dir: 'left' | 'right') => void)>(null);
+  
+
 
   return (
     <div className="relative h-full w-full flex flex-col items-center touch-none p-4 pt-2 gap-4">
