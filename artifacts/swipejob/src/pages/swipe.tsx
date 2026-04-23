@@ -37,12 +37,48 @@ export default function SwipePage() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col h-full w-full p-4 items-center justify-center">
-        <Skeleton className="w-full max-w-sm aspect-[3/4] rounded-3xl" />
+  return (
+    <div className="flex flex-col h-full w-full p-4 items-center justify-center gap-6">
+      
+      {/* Top undo button skeleton */}
+      <div className="self-end">
+        <Skeleton className="w-10 h-10 rounded-full" />
       </div>
-    );
-  }
+
+      {/* Card stack skeleton */}
+      <div className="relative w-full max-w-sm aspect-[3/4]">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="absolute inset-0 rounded-3xl border bg-card shadow-xl p-6"
+            style={{
+              transform: `scale(${1 - i * 0.05}) translateY(${i * 10}px)`,
+              zIndex: 3 - i,
+            }}
+          >
+            <div className="space-y-4">
+              <Skeleton className="w-16 h-16 rounded-2xl" />
+              <Skeleton className="h-8 w-3/4" />
+              <Skeleton className="h-5 w-1/2" />
+              <div className="flex gap-2">
+                <Skeleton className="h-6 w-20 rounded-full" />
+                <Skeleton className="h-6 w-20 rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Buttons skeleton */}
+      <div className="flex gap-6">
+        <Skeleton className="w-14 h-14 rounded-full" />
+        <Skeleton className="w-16 h-16 rounded-full" />
+      </div>
+    </div>
+  );
+}
 
   if (error) {
     return (
