@@ -251,9 +251,10 @@ function JobCard({
   };
 
   useEffect(() => {
-    if (isTop && registerTrigger) registerTrigger(triggerSwipe);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isTop]);
+  if (isTop && registerTrigger) {
+    registerTrigger(triggerSwipe);
+  }
+}, [isTop, registerTrigger]);
 
   return (
     <>
