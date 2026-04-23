@@ -221,7 +221,7 @@ function EmployerWorkspace({ company }: { company: Company }) {
           <QueueView items={feed} loading={feedLoading} onDecide={handleDecision} />
         )}
         {tab === "matches" && (
-          <MatchesView matches={matches} loading={matchesLoading} companyId={companyId} />
+          <MatchesView matches={matches} loading={matchesLoading} companyId={company.id} />
         )}
         {tab === "jobs" && (
           <JobsView company={company} jobs={jobs} loading={jobsLoading} />
