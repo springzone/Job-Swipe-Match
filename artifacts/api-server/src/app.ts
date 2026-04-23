@@ -27,7 +27,15 @@ app.use(
     },
   }),
 );
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "https://your-frontend.vercel.app", // 👈 your Vercel frontend URL
+    ],
+    credentials: true, // 👈 VERY IMPORTANT
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
