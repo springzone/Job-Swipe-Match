@@ -8,6 +8,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Loader2 } from "lucide-react";
 
 export default function SwipePage() {
   const { data: jobs, isLoading, error } = useGetJobFeed();
@@ -33,6 +34,8 @@ export default function SwipePage() {
       }
     }
   });
+
+  const isMutating = swipeJob.isPending;
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -160,20 +163,30 @@ export default function SwipePage() {
           <Button 
             size="icon" 
             variant="outline" 
+            disabled={isMutating}
             className="w-14 h-14 rounded-full border-2 border-border shadow-lg bg-background text-destructive hover:bg-destructive/10 hover:border-destructive transition-transform hover:scale-105 active:scale-95"
             onClick={() => triggerRef.current?.('left')}
             data-testid="button-pass"
           >
-            <X className="w-7 h-7" />
+            {isMutating? (
+  <Loader2 className="w-6 h-6 animate-spin" />
+) : (
+  <X className="w-7 h-7" />
+)}
           </Button>
           
           <Button 
             size="icon" 
+            disabled={isMutating}
             className="w-16 h-16 rounded-full shadow-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-transform hover:scale-105 active:scale-95"
             onClick={() => triggerRef.current?.('right')}
             data-testid="button-like"
           >
-            <Heart className="w-8 h-8 fill-current" />
+            {isMutating? (
+  <Loader2 className="w-6 h-6 animate-spin" />
+) : (
+  <Heart className="w-8 h-8 fill-current" />
+)}
           </Button>
         </div>
       )}
