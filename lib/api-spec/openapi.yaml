@@ -152,6 +152,92 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/Application" }
 
+  /matches/{matchId}/messages:
+    get:
+      operationId: listMatchMessages
+      tags: [matches]
+      summary: List messages for a match (candidate side)
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Message" }
+    post:
+      operationId: sendMatchMessage
+      tags: [matches]
+      summary: Send a message in a match (candidate side)
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MessageInput" }
+      responses:
+        "200":
+          description: Message sent
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+
+  /employer/{companyId}/matches/{matchId}/messages:
+    get:
+      operationId: listEmployerMatchMessages
+      tags: [employer]
+      summary: List messages for a match (employer side)
+      parameters:
+        - name: companyId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: matchId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Message" }
+    post:
+      operationId: sendEmployerMatchMessage
+      tags: [employer]
+      summary: Send a message in a match (employer side)
+      parameters:
+        - name: companyId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: matchId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MessageInput" }
+      responses:
+        "200":
+          description: Message sent
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Message" }
+
   /matches/{matchId}/dismiss:
     post:
       operationId: dismissMatch
@@ -483,6 +569,24 @@ components:
         screeningAnswers:
           type: array
           items: { $ref: "#/components/schemas/ScreeningAnswer" }
+
+    Message:
+      type: object
+      required: [id, matchId, sender, body, createdAt]
+      properties:
+        id: { type: string }
+        matchId: { type: string }
+        sender:
+          type: string
+          enum: [candidate, employer]
+        body: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    MessageInput:
+      type: object
+      required: [body]
+      properties:
+        body: { type: string, minLength: 1, maxLength: 2000 }
 
     ScreeningAnswer:
       type: object

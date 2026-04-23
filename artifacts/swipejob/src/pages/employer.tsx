@@ -15,7 +15,9 @@ import {
   Plus,
   Trash2,
   Loader2,
+  MessageSquare,
 } from "lucide-react";
+import { ChatThread } from "@/components/chat-thread";
 import {
   useListEmployerCompanies,
   useGetEmployerFeed,
@@ -219,7 +221,7 @@ function EmployerWorkspace({ company }: { company: Company }) {
           <QueueView items={feed} loading={feedLoading} onDecide={handleDecision} />
         )}
         {tab === "matches" && (
-          <MatchesView matches={matches} loading={matchesLoading} />
+          <MatchesView matches={matches} loading={matchesLoading} companyId={companyId} />
         )}
         {tab === "jobs" && (
           <JobsView company={company} jobs={jobs} loading={jobsLoading} />
@@ -773,10 +775,15 @@ function CandidateCard({
 function MatchesView({
   matches,
   loading,
+  companyId,
 }: {
   matches: EmployerMatch[] | undefined;
   loading: boolean;
+  companyId: string;
 }) {
+  const [chatMatchId, setChatMatchId] = useState<string | null>(null);
+  const chatMatch = matches?.find((m) => m.id === chatMatchId);
+
   if (loading) {
     return (
       <div className="p-4 space-y-3">
@@ -872,6 +879,16 @@ function MatchesView({
                   {m.cvText}
                 </div>
               )}
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full mt-2"
+                onClick={() => setChatMatchId(m.id)}
+                data-testid={`button-chat-${m.id}`}
+              >
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Message {m.candidateName ?? m.anonymousHandle}
+              </Button>
             </div>
           ) : (
             <p className="text-xs text-muted-foreground mt-2">
@@ -880,6 +897,17 @@ function MatchesView({
           )}
         </div>
       ))}
+      {chatMatchId && (
+        <ChatThread
+          open={!!chatMatchId}
+          onOpenChange={(o) => !o && setChatMatchId(null)}
+          matchId={chatMatchId}
+          side="employer"
+          companyId={companyId}
+          title={chatMatch ? `Chat with ${chatMatch.candidateName ?? chatMatch.anonymousHandle}` : "Chat"}
+          subtitle={chatMatch ? `About: ${chatMatch.job.title}` : undefined}
+        />
+      )}
     </div>
   );
 }

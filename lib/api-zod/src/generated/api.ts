@@ -303,6 +303,86 @@ export const ConfirmSendCvResponse = zod.object({
 });
 
 /**
+ * @summary List messages for a match (candidate side)
+ */
+export const ListMatchMessagesParams = zod.object({
+  matchId: zod.coerce.string(),
+});
+
+export const ListMatchMessagesResponseItem = zod.object({
+  id: zod.string(),
+  matchId: zod.string(),
+  sender: zod.enum(["candidate", "employer"]),
+  body: zod.string(),
+  createdAt: zod.coerce.date(),
+});
+export const ListMatchMessagesResponse = zod.array(
+  ListMatchMessagesResponseItem,
+);
+
+/**
+ * @summary Send a message in a match (candidate side)
+ */
+export const SendMatchMessageParams = zod.object({
+  matchId: zod.coerce.string(),
+});
+
+export const sendMatchMessageBodyBodyMax = 2000;
+
+export const SendMatchMessageBody = zod.object({
+  body: zod.string().min(1).max(sendMatchMessageBodyBodyMax),
+});
+
+export const SendMatchMessageResponse = zod.object({
+  id: zod.string(),
+  matchId: zod.string(),
+  sender: zod.enum(["candidate", "employer"]),
+  body: zod.string(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary List messages for a match (employer side)
+ */
+export const ListEmployerMatchMessagesParams = zod.object({
+  companyId: zod.coerce.string(),
+  matchId: zod.coerce.string(),
+});
+
+export const ListEmployerMatchMessagesResponseItem = zod.object({
+  id: zod.string(),
+  matchId: zod.string(),
+  sender: zod.enum(["candidate", "employer"]),
+  body: zod.string(),
+  createdAt: zod.coerce.date(),
+});
+export const ListEmployerMatchMessagesResponse = zod.array(
+  ListEmployerMatchMessagesResponseItem,
+);
+
+/**
+ * @summary Send a message in a match (employer side)
+ */
+export const SendEmployerMatchMessageParams = zod.object({
+  companyId: zod.coerce.string(),
+  matchId: zod.coerce.string(),
+});
+
+export const sendEmployerMatchMessageBodyBodyMax = 2000;
+
+export const SendEmployerMatchMessageBody = zod.object({
+  body: zod.string().min(1).max(sendEmployerMatchMessageBodyBodyMax),
+});
+
+export const SendEmployerMatchMessageResponse = zod.object({
+  id: zod.string(),
+  matchId: zod.string(),
+  sender: zod.enum(["candidate", "employer"]),
+  body: zod.string(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
  * @summary Dismiss a match without sending CV
  */
 export const DismissMatchParams = zod.object({

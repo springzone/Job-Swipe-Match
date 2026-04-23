@@ -8,8 +8,9 @@ import {
   matchesTable,
   candidatesTable,
   applicationsTable,
+  messagesTable,
 } from "@workspace/db";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { serializeCompany, serializeJob, computeMatchScore } from "../lib/serializers";
 
 const router: IRouter = Router();
@@ -268,6 +269,69 @@ router.get("/employer/:companyId/matches", async (req, res) => {
     .filter(Boolean);
 
   res.json(out);
+});
+
+async function loadEmployerMatch(companyId: string, matchId: string) {
+  const match = (await db.select().from(matchesTable).where(eq(matchesTable.id, matchId)).limit(1))[0];
+  if (!match) return null;
+  const job = (await db.select().from(jobsTable).where(eq(jobsTable.id, match.jobId)).limit(1))[0];
+  if (!job || job.companyId !== companyId) return null;
+  return match;
+}
+
+router.get("/employer/:companyId/matches/:matchId/messages", async (req, res) => {
+  const match = await loadEmployerMatch(req.params.companyId, req.params.matchId);
+  if (!match) {
+    res.status(404).json({ error: "match_not_found" });
+    return;
+  }
+  const rows = await db
+    .select()
+    .from(messagesTable)
+    .where(eq(messagesTable.matchId, match.id))
+    .orderBy(asc(messagesTable.createdAt));
+  res.json(
+    rows.map((m) => ({
+      id: m.id,
+      matchId: m.matchId,
+      sender: m.sender as "candidate" | "employer",
+      body: m.body,
+      createdAt: m.createdAt.toISOString(),
+    })),
+  );
+});
+
+router.post("/employer/:companyId/matches/:matchId/messages", async (req, res) => {
+  const body = (req.body?.body ?? "").toString().trim();
+  if (!body) {
+    res.status(400).json({ error: "empty_body" });
+    return;
+  }
+  const match = await loadEmployerMatch(req.params.companyId, req.params.matchId);
+  if (!match) {
+    res.status(404).json({ error: "match_not_found" });
+    return;
+  }
+  if (match.status !== "cv_sent") {
+    res.status(409).json({ error: "chat_locked", message: "Chat opens once the candidate shares their CV." });
+    return;
+  }
+  const [created] = await db
+    .insert(messagesTable)
+    .values({
+      id: randomUUID(),
+      matchId: match.id,
+      sender: "employer",
+      body: body.slice(0, 2000),
+    })
+    .returning();
+  res.json({
+    id: created.id,
+    matchId: created.matchId,
+    sender: created.sender as "candidate" | "employer",
+    body: created.body,
+    createdAt: created.createdAt.toISOString(),
+  });
 });
 
 export default router;

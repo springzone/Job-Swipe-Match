@@ -10,7 +10,8 @@ import {
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { Building, MapPin, Briefcase, FileText, Send, X, CheckCircle2, ChevronRight } from "lucide-react";
+import { Building, MapPin, Briefcase, FileText, Send, X, CheckCircle2, ChevronRight, MessageSquare } from "lucide-react";
+import { ChatThread } from "@/components/chat-thread";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -35,6 +36,7 @@ export default function MatchesPage() {
   const queryClient = useQueryClient();
   
   const [selectedMatchId, setSelectedMatchId] = useState<string | null>(null);
+  const [chatMatchId, setChatMatchId] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -179,11 +181,22 @@ export default function MatchesPage() {
                     </Button>
                   </div>
                 ) : match.status === 'cv_sent' ? (
-                  <div className="flex items-center justify-between mt-4 py-2 px-3 bg-primary/10 rounded-lg border border-primary/20 text-sm font-medium text-primary">
-                    <span className="flex items-center gap-2">
-                      <CheckCircle2 className="w-4 h-4" /> CV Sent
-                    </span>
-                    <span className="text-xs opacity-80">{formatDistanceToNow(new Date(match.createdAt), { addSuffix: true })}</span>
+                  <div className="space-y-2 mt-4">
+                    <div className="flex items-center justify-between py-2 px-3 bg-primary/10 rounded-lg border border-primary/20 text-sm font-medium text-primary">
+                      <span className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4" /> CV Sent
+                      </span>
+                      <span className="text-xs opacity-80">{formatDistanceToNow(new Date(match.createdAt), { addSuffix: true })}</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => setChatMatchId(match.id)}
+                      data-testid={`button-chat-${match.id}`}
+                    >
+                      <MessageSquare className="w-4 h-4 mr-2" />
+                      Message {match.job.company.name}
+                    </Button>
                   </div>
                 ) : (
                   <div className="mt-4 text-sm text-muted-foreground font-medium flex items-center gap-2">
@@ -195,6 +208,20 @@ export default function MatchesPage() {
           </AnimatePresence>
         </div>
       )}
+
+      {chatMatchId && (() => {
+        const m = matches?.find((x) => x.id === chatMatchId);
+        return (
+          <ChatThread
+            open={!!chatMatchId}
+            onOpenChange={(o) => !o && setChatMatchId(null)}
+            matchId={chatMatchId}
+            side="candidate"
+            title={m ? `Chat with ${m.job.company.name}` : "Chat"}
+            subtitle={m ? `About: ${m.job.title}` : undefined}
+          />
+        );
+      })()}
 
       {/* CV Confirmation Dialog */}
       <Dialog open={!!selectedMatchId} onOpenChange={(open) => !open && setSelectedMatchId(null)}>

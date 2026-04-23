@@ -33,6 +33,8 @@ import type {
   Job,
   JobInput,
   Match,
+  Message,
+  MessageInput,
   StatsSummary,
   SwipeInput,
   SwipeResult,
@@ -678,6 +680,384 @@ export const useConfirmSendCv = <
   TContext
 > => {
   return useMutation(getConfirmSendCvMutationOptions(options));
+};
+
+/**
+ * @summary List messages for a match (candidate side)
+ */
+export const getListMatchMessagesUrl = (matchId: string) => {
+  return `/api/matches/${matchId}/messages`;
+};
+
+export const listMatchMessages = async (
+  matchId: string,
+  options?: RequestInit,
+): Promise<Message[]> => {
+  return customFetch<Message[]>(getListMatchMessagesUrl(matchId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListMatchMessagesQueryKey = (matchId: string) => {
+  return [`/api/matches/${matchId}/messages`] as const;
+};
+
+export const getListMatchMessagesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listMatchMessages>>,
+  TError = ErrorType<unknown>,
+>(
+  matchId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listMatchMessages>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListMatchMessagesQueryKey(matchId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listMatchMessages>>
+  > = ({ signal }) => listMatchMessages(matchId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!matchId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listMatchMessages>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListMatchMessagesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listMatchMessages>>
+>;
+export type ListMatchMessagesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List messages for a match (candidate side)
+ */
+
+export function useListMatchMessages<
+  TData = Awaited<ReturnType<typeof listMatchMessages>>,
+  TError = ErrorType<unknown>,
+>(
+  matchId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listMatchMessages>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListMatchMessagesQueryOptions(matchId, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Send a message in a match (candidate side)
+ */
+export const getSendMatchMessageUrl = (matchId: string) => {
+  return `/api/matches/${matchId}/messages`;
+};
+
+export const sendMatchMessage = async (
+  matchId: string,
+  messageInput: MessageInput,
+  options?: RequestInit,
+): Promise<Message> => {
+  return customFetch<Message>(getSendMatchMessageUrl(matchId), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(messageInput),
+  });
+};
+
+export const getSendMatchMessageMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendMatchMessage>>,
+    TError,
+    { matchId: string; data: BodyType<MessageInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sendMatchMessage>>,
+  TError,
+  { matchId: string; data: BodyType<MessageInput> },
+  TContext
+> => {
+  const mutationKey = ["sendMatchMessage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sendMatchMessage>>,
+    { matchId: string; data: BodyType<MessageInput> }
+  > = (props) => {
+    const { matchId, data } = props ?? {};
+
+    return sendMatchMessage(matchId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SendMatchMessageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof sendMatchMessage>>
+>;
+export type SendMatchMessageMutationBody = BodyType<MessageInput>;
+export type SendMatchMessageMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Send a message in a match (candidate side)
+ */
+export const useSendMatchMessage = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendMatchMessage>>,
+    TError,
+    { matchId: string; data: BodyType<MessageInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof sendMatchMessage>>,
+  TError,
+  { matchId: string; data: BodyType<MessageInput> },
+  TContext
+> => {
+  return useMutation(getSendMatchMessageMutationOptions(options));
+};
+
+/**
+ * @summary List messages for a match (employer side)
+ */
+export const getListEmployerMatchMessagesUrl = (
+  companyId: string,
+  matchId: string,
+) => {
+  return `/api/employer/${companyId}/matches/${matchId}/messages`;
+};
+
+export const listEmployerMatchMessages = async (
+  companyId: string,
+  matchId: string,
+  options?: RequestInit,
+): Promise<Message[]> => {
+  return customFetch<Message[]>(
+    getListEmployerMatchMessagesUrl(companyId, matchId),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getListEmployerMatchMessagesQueryKey = (
+  companyId: string,
+  matchId: string,
+) => {
+  return [`/api/employer/${companyId}/matches/${matchId}/messages`] as const;
+};
+
+export const getListEmployerMatchMessagesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listEmployerMatchMessages>>,
+  TError = ErrorType<unknown>,
+>(
+  companyId: string,
+  matchId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listEmployerMatchMessages>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ??
+    getListEmployerMatchMessagesQueryKey(companyId, matchId);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listEmployerMatchMessages>>
+  > = ({ signal }) =>
+    listEmployerMatchMessages(companyId, matchId, {
+      signal,
+      ...requestOptions,
+    });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!(companyId && matchId),
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof listEmployerMatchMessages>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListEmployerMatchMessagesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listEmployerMatchMessages>>
+>;
+export type ListEmployerMatchMessagesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List messages for a match (employer side)
+ */
+
+export function useListEmployerMatchMessages<
+  TData = Awaited<ReturnType<typeof listEmployerMatchMessages>>,
+  TError = ErrorType<unknown>,
+>(
+  companyId: string,
+  matchId: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listEmployerMatchMessages>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListEmployerMatchMessagesQueryOptions(
+    companyId,
+    matchId,
+    options,
+  );
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Send a message in a match (employer side)
+ */
+export const getSendEmployerMatchMessageUrl = (
+  companyId: string,
+  matchId: string,
+) => {
+  return `/api/employer/${companyId}/matches/${matchId}/messages`;
+};
+
+export const sendEmployerMatchMessage = async (
+  companyId: string,
+  matchId: string,
+  messageInput: MessageInput,
+  options?: RequestInit,
+): Promise<Message> => {
+  return customFetch<Message>(
+    getSendEmployerMatchMessageUrl(companyId, matchId),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...options?.headers },
+      body: JSON.stringify(messageInput),
+    },
+  );
+};
+
+export const getSendEmployerMatchMessageMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendEmployerMatchMessage>>,
+    TError,
+    { companyId: string; matchId: string; data: BodyType<MessageInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sendEmployerMatchMessage>>,
+  TError,
+  { companyId: string; matchId: string; data: BodyType<MessageInput> },
+  TContext
+> => {
+  const mutationKey = ["sendEmployerMatchMessage"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sendEmployerMatchMessage>>,
+    { companyId: string; matchId: string; data: BodyType<MessageInput> }
+  > = (props) => {
+    const { companyId, matchId, data } = props ?? {};
+
+    return sendEmployerMatchMessage(companyId, matchId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SendEmployerMatchMessageMutationResult = NonNullable<
+  Awaited<ReturnType<typeof sendEmployerMatchMessage>>
+>;
+export type SendEmployerMatchMessageMutationBody = BodyType<MessageInput>;
+export type SendEmployerMatchMessageMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Send a message in a match (employer side)
+ */
+export const useSendEmployerMatchMessage = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendEmployerMatchMessage>>,
+    TError,
+    { companyId: string; matchId: string; data: BodyType<MessageInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof sendEmployerMatchMessage>>,
+  TError,
+  { companyId: string; matchId: string; data: BodyType<MessageInput> },
+  TContext
+> => {
+  return useMutation(getSendEmployerMatchMessageMutationOptions(options));
 };
 
 /**

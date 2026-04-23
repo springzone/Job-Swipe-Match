@@ -136,6 +136,29 @@ export interface Application {
   screeningAnswers: ScreeningAnswer[];
 }
 
+export type MessageSender = (typeof MessageSender)[keyof typeof MessageSender];
+
+export const MessageSender = {
+  candidate: "candidate",
+  employer: "employer",
+} as const;
+
+export interface Message {
+  id: string;
+  matchId: string;
+  sender: MessageSender;
+  body: string;
+  createdAt: string;
+}
+
+export interface MessageInput {
+  /**
+   * @minLength 1
+   * @maxLength 2000
+   */
+  body: string;
+}
+
 export interface ConfirmSendCvInput {
   screeningAnswers?: ScreeningAnswer[];
 }
