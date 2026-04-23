@@ -124,7 +124,7 @@ export default function SwipePage() {
   };
 
   const topJob = activeJobs[0];
-  const triggerRef = useRef<null | ((dir: 'left' | 'right') => void)>(null);
+const triggerRef = useRef<null | ((dir: 'left' | 'right') => void)>(null);
 
   return (
     <div className="relative h-full w-full flex flex-col items-center touch-none p-4 pt-2 gap-4">
