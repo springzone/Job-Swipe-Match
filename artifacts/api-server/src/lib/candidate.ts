@@ -31,10 +31,11 @@ export async function getOrCreateCandidate(req: Request, res: Response) {
     })
     .returning();
   res.cookie(COOKIE, id, {
-    httpOnly: true,
-    sameSite: "lax",
-    maxAge: 1000 * 60 * 60 * 24 * 365,
-    path: "/",
-  });
+  httpOnly: true,
+  secure: true,
+  sameSite: "none",
+  maxAge: 1000 * 60 * 60 * 24 * 365,
+  path: "/",
+});
   return created;
 }
