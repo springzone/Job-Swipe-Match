@@ -31,7 +31,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://your-frontend.vercel.app", // 👈 your Vercel frontend URL
+      "https://job-swipe-match-api-server.vercel.app/", // 👈 your Vercel frontend URL
     ],
     credentials: true, // 👈 VERY IMPORTANT
   })
