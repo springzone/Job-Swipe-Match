@@ -71,7 +71,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <Heart className="w-3.5 h-3.5 text-primary-foreground fill-current" />
             </div>
             <span className="font-bold text-sm tracking-tight">
-              {isEmployer ? "SwipeJob — Employer" : "SwipeJob"}
+              {isEmployer ? "SwipeJob TEST 🚀" : "SwipeJob"}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
