@@ -10,9 +10,13 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
 import { useListMatches } from "@workspace/api-client-react";
+
+const BASE_TITLE = "SwipeJob";
 
 const candidateNav = [
   { href: "/", icon: Briefcase, label: "Swipe" },
@@ -29,9 +33,34 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const { data: matchData } = useListMatches({
     query: { enabled: !isEmployer, refetchInterval: 8000 },
   });
-  const unreadByPath: Record<string, number> = {
-    "/matches": (matchData ?? []).reduce((sum, m) => sum + (m.unreadCount ?? 0), 0),
-  };
+  const totalUnread = (matchData ?? []).reduce((sum, m) => sum + (m.unreadCount ?? 0), 0);
+  const unreadByPath: Record<string, number> = { "/matches": totalUnread };
+
+  const prevUnreadRef = useRef<Map<string, number> | null>(null);
+  useEffect(() => {
+    if (!matchData) return;
+    const current = new Map(matchData.map((m) => [m.id, m.unreadCount ?? 0]));
+    const prev = prevUnreadRef.current;
+    if (prev) {
+      for (const m of matchData) {
+        const before = prev.get(m.id) ?? 0;
+        const now = m.unreadCount ?? 0;
+        if (now > before && location !== "/matches") {
+          toast(`New message from ${m.job.company.name}`, {
+            description: `About: ${m.job.title}`,
+          });
+        }
+      }
+    }
+    prevUnreadRef.current = current;
+  }, [matchData, location]);
+
+  useEffect(() => {
+    document.title = totalUnread > 0 ? `(${totalUnread}) ${BASE_TITLE}` : BASE_TITLE;
+    return () => {
+      document.title = BASE_TITLE;
+    };
+  }, [totalUnread]);
 
   return (
     <div className="flex justify-center min-h-[100dvh] bg-muted/30">
