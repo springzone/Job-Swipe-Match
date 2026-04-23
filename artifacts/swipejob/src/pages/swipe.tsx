@@ -40,6 +40,7 @@ export default function SwipePage() {
   const isMutating = swipeJob.isPending;
   const activeJobs = jobs?.slice(currentIndex) || [];
   const topJob = activeJobs[0];
+  const visibleJobs = activeJobs.slice(0, 3).reverse();
 
   
 
@@ -150,17 +151,23 @@ export default function SwipePage() {
       </div>
 
       <div className="relative w-full max-w-sm aspect-[3/4] sm:aspect-[4/5] mx-auto flex items-center justify-center z-0 perspective-1000">
-        {activeJobs.slice(0, 3).reverse().map((job, idx) => (
-          <JobCard 
-            key={job.id} 
-            job={job} 
-            isTop={idx === 2}
-            onSwipe={(dir) => handleSwipe(dir, job.id)}
-            index={idx}
-            registerTrigger={idx === 2 ? (fn) => { triggerRef.current = fn; } : undefined}
-          />
-        ))}
-      </div>
+  {visibleJobs.map((job, idx) => {
+    const isTopCard = idx === visibleJobs.length - 1;
+
+    return (
+      <JobCard
+        key={job.id}
+        job={job}
+        isTop={isTopCard}
+        onSwipe={(dir) => handleSwipe(dir, job.id)}
+        index={idx}
+        registerTrigger={
+          isTopCard ? (fn) => { triggerRef.current = fn; } : undefined
+        }
+      />
+    );
+  })}
+</div>
 
       {topJob && (
         <div className="flex justify-center items-center gap-6 pb-2 pt-2">
