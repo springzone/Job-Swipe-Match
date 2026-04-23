@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useGetJobFeed, useSwipeJob, getGetJobFeedQueryKey, getListMatchesQueryKey, getGetStatsSummaryQueryKey, getGetRecentActivityQueryKey, SwipeInputDirection } from "@workspace/api-client-react";
 import { motion, useAnimation, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import { X, Heart, MapPin, Building, Briefcase, RotateCcw, AlertCircle } from "lucide-react";
@@ -124,7 +124,7 @@ export default function SwipePage() {
   };
 
   const topJob = activeJobs[0];
-  const triggerRef = { current: null as null | ((dir: 'left' | 'right') => void) };
+  const triggerRef = useRef<null | ((dir: 'left' | 'right') => void)>(null);
 
   return (
     <div className="relative h-full w-full flex flex-col items-center touch-none p-4 pt-2 gap-4">
