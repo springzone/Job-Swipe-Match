@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/components/theme-provider";
 import { useListMatches } from "@workspace/api-client-react";
 
-const BASE_TITLE = "SwipeJob";
+const BASE_TITLE = "SwipeJob TEST";
 
 const candidateNav = [
   { href: "/", icon: Briefcase, label: "Swipe" },
