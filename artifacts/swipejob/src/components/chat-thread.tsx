@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, Sparkles, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
@@ -12,14 +13,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   useListMatchMessages,
   useSendMatchMessage,
   useListEmployerMatchMessages,
   useSendEmployerMatchMessage,
+  useListEmployerCompanies,
+  useUpdateQuickReplies,
   getListMatchMessagesQueryKey,
   getListEmployerMatchMessagesQueryKey,
+  getListEmployerCompaniesQueryKey,
   type Message,
 } from "@workspace/api-client-react";
 
@@ -69,6 +74,13 @@ export function ChatThread({
       });
     }
   };
+
+  const companiesQuery = useListEmployerCompanies({
+    query: { enabled: open && side === "employer" },
+  });
+  const company = companiesQuery.data?.find((c) => c.id === companyId);
+  const quickReplies = company?.quickReplies ?? [];
+  const [manageOpen, setManageOpen] = useState(false);
 
   const candidateSend = useSendMatchMessage({
     mutation: { onSuccess: () => { setDraft(""); invalidate(); } },
@@ -149,7 +161,37 @@ export function ChatThread({
           )}
         </ScrollArea>
 
-        <div className="border-t border-border/50 p-3 bg-background flex items-end gap-2">
+        {side === "employer" && (
+          <div className="border-t border-border/50 px-3 pt-2 pb-1 bg-background flex items-center gap-2 overflow-x-auto">
+            <Sparkles className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+            {quickReplies.length === 0 ? (
+              <span className="text-xs text-muted-foreground flex-shrink-0">No quick replies yet</span>
+            ) : (
+              quickReplies.map((q, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setDraft(q)}
+                  className="text-xs px-2.5 py-1 rounded-full bg-muted hover-elevate text-foreground whitespace-nowrap flex-shrink-0 max-w-[180px] truncate"
+                  title={q}
+                  data-testid={`quick-reply-${i}`}
+                >
+                  {q}
+                </button>
+              ))
+            )}
+            <button
+              type="button"
+              onClick={() => setManageOpen(true)}
+              className="ml-auto text-xs font-medium text-primary hover:underline whitespace-nowrap flex-shrink-0"
+              data-testid="button-manage-quick-replies"
+            >
+              Manage
+            </button>
+          </div>
+        )}
+
+        <div className={`${side === "employer" ? "" : "border-t border-border/50"} p-3 bg-background flex items-end gap-2`}>
           <Textarea
             rows={1}
             placeholder="Type a message…"
@@ -174,6 +216,138 @@ export function ChatThread({
             {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </Button>
         </div>
+      </DialogContent>
+      {side === "employer" && companyId && (
+        <ManageQuickRepliesDialog
+          open={manageOpen}
+          onOpenChange={setManageOpen}
+          companyId={companyId}
+          initial={quickReplies}
+        />
+      )}
+    </Dialog>
+  );
+}
+
+function ManageQuickRepliesDialog({
+  open,
+  onOpenChange,
+  companyId,
+  initial,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  companyId: string;
+  initial: string[];
+}) {
+  const queryClient = useQueryClient();
+  const [items, setItems] = useState<string[]>(initial);
+  const [draft, setDraft] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      setItems(initial);
+      setDraft("");
+    }
+  }, [open, initial]);
+
+  const save = useUpdateQuickReplies({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListEmployerCompaniesQueryKey() });
+        toast.success("Quick replies saved");
+        onOpenChange(false);
+      },
+      onError: () => toast.error("Could not save"),
+    },
+  });
+
+  const addItem = () => {
+    const v = draft.trim();
+    if (!v) return;
+    setItems((prev) => [...prev, v].slice(0, 20));
+    setDraft("");
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md max-h-[85vh] flex flex-col rounded-3xl">
+        <DialogHeader>
+          <DialogTitle>Quick replies</DialogTitle>
+          <DialogDescription>
+            Save canned messages your team uses often. Tap one in chat to drop it into the input.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex-1 overflow-y-auto space-y-2 -mx-1 px-1">
+          {items.length === 0 && (
+            <div className="text-sm text-muted-foreground text-center py-4">
+              No templates yet. Add one below.
+            </div>
+          )}
+          {items.map((q, i) => (
+            <div
+              key={i}
+              className="flex items-start gap-2 p-2 rounded-xl bg-muted/40 border border-border/50"
+              data-testid={`template-${i}`}
+            >
+              <Textarea
+                rows={2}
+                value={q}
+                onChange={(e) =>
+                  setItems((prev) => prev.map((x, idx) => (idx === i ? e.target.value : x)))
+                }
+                className="text-sm resize-none min-h-[40px]"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setItems((prev) => prev.filter((_, idx) => idx !== i))}
+                className="text-muted-foreground hover:text-destructive flex-shrink-0"
+                data-testid={`button-delete-template-${i}`}
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          ))}
+          <div className="flex items-center gap-2 pt-2">
+            <Input
+              placeholder="Add a new quick reply…"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  addItem();
+                }
+              }}
+              data-testid="input-new-template"
+            />
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={addItem}
+              disabled={!draft.trim() || items.length >= 20}
+              data-testid="button-add-template"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+        <DialogFooter className="flex-row sm:justify-end gap-2">
+          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={() => {
+              const cleaned = items.map((s) => s.trim()).filter((s) => s.length > 0);
+              save.mutate({ companyId, data: { quickReplies: cleaned } });
+            }}
+            disabled={save.isPending}
+            data-testid="button-save-templates"
+          >
+            {save.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

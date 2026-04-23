@@ -289,6 +289,30 @@ router.get("/employer/:companyId/matches", async (req, res) => {
   res.json(out);
 });
 
+router.put("/employer/:companyId/quick-replies", async (req, res) => {
+  const companyId = req.params.companyId;
+  const raw = Array.isArray(req.body?.quickReplies) ? req.body.quickReplies : null;
+  if (!raw) {
+    res.status(400).json({ error: "invalid_body" });
+    return;
+  }
+  const cleaned = raw
+    .map((s: unknown) => (typeof s === "string" ? s.trim() : ""))
+    .filter((s: string) => s.length > 0)
+    .slice(0, 20)
+    .map((s: string) => s.slice(0, 500));
+  const [updated] = await db
+    .update(companiesTable)
+    .set({ quickReplies: cleaned })
+    .where(eq(companiesTable.id, companyId))
+    .returning();
+  if (!updated) {
+    res.status(404).json({ error: "company_not_found" });
+    return;
+  }
+  res.json(serializeCompany(updated));
+});
+
 async function loadEmployerMatch(companyId: string, matchId: string) {
   const match = (await db.select().from(matchesTable).where(eq(matchesTable.id, matchId)).limit(1))[0];
   if (!match) return null;

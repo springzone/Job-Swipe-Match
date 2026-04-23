@@ -14,4 +14,5 @@ export interface Company {
   industry?: string | null;
   size?: string | null;
   about?: string | null;
+  quickReplies: string[];
 }

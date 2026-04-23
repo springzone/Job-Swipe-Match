@@ -87,6 +87,7 @@ export const GetJobFeedResponseItem = zod.object({
     industry: zod.string().nullish(),
     size: zod.string().nullish(),
     about: zod.string().nullish(),
+    quickReplies: zod.array(zod.string()),
   }),
   location: zod.string(),
   remote: zod.boolean().optional(),
@@ -124,6 +125,7 @@ export const GetJobResponse = zod.object({
     industry: zod.string().nullish(),
     size: zod.string().nullish(),
     about: zod.string().nullish(),
+    quickReplies: zod.array(zod.string()),
   }),
   location: zod.string(),
   remote: zod.boolean().optional(),
@@ -178,6 +180,7 @@ export const SwipeJobResponse = zod.object({
           industry: zod.string().nullish(),
           size: zod.string().nullish(),
           about: zod.string().nullish(),
+          quickReplies: zod.array(zod.string()),
         }),
         location: zod.string(),
         remote: zod.boolean().optional(),
@@ -223,6 +226,7 @@ export const ListMatchesResponseItem = zod.object({
       industry: zod.string().nullish(),
       size: zod.string().nullish(),
       about: zod.string().nullish(),
+      quickReplies: zod.array(zod.string()),
     }),
     location: zod.string(),
     remote: zod.boolean().optional(),
@@ -280,6 +284,7 @@ export const ConfirmSendCvResponse = zod.object({
       industry: zod.string().nullish(),
       size: zod.string().nullish(),
       about: zod.string().nullish(),
+      quickReplies: zod.array(zod.string()),
     }),
     location: zod.string(),
     remote: zod.boolean().optional(),
@@ -412,6 +417,7 @@ export const DismissMatchResponse = zod.object({
       industry: zod.string().nullish(),
       size: zod.string().nullish(),
       about: zod.string().nullish(),
+      quickReplies: zod.array(zod.string()),
     }),
     location: zod.string(),
     remote: zod.boolean().optional(),
@@ -453,6 +459,7 @@ export const ListApplicationsResponseItem = zod.object({
       industry: zod.string().nullish(),
       size: zod.string().nullish(),
       about: zod.string().nullish(),
+      quickReplies: zod.array(zod.string()),
     }),
     location: zod.string(),
     remote: zod.boolean().optional(),
@@ -530,10 +537,39 @@ export const ListEmployerCompaniesResponseItem = zod.object({
   industry: zod.string().nullish(),
   size: zod.string().nullish(),
   about: zod.string().nullish(),
+  quickReplies: zod.array(zod.string()),
 });
 export const ListEmployerCompaniesResponse = zod.array(
   ListEmployerCompaniesResponseItem,
 );
+
+/**
+ * @summary Save the list of quick-reply templates for a company
+ */
+export const UpdateQuickRepliesParams = zod.object({
+  companyId: zod.coerce.string(),
+});
+
+export const updateQuickRepliesBodyQuickRepliesItemMax = 500;
+
+export const UpdateQuickRepliesBody = zod.object({
+  quickReplies: zod.array(
+    zod.string().min(1).max(updateQuickRepliesBodyQuickRepliesItemMax),
+  ),
+});
+
+export const UpdateQuickRepliesResponse = zod.object({
+  id: zod.string(),
+  name: zod.string(),
+  logoColor: zod
+    .string()
+    .nullish()
+    .describe("Hex color used for logo placeholder"),
+  industry: zod.string().nullish(),
+  size: zod.string().nullish(),
+  about: zod.string().nullish(),
+  quickReplies: zod.array(zod.string()),
+});
 
 /**
  * @summary Pending candidates who right-swiped on this company's jobs
@@ -567,6 +603,7 @@ export const GetEmployerFeedResponseItem = zod.object({
       industry: zod.string().nullish(),
       size: zod.string().nullish(),
       about: zod.string().nullish(),
+      quickReplies: zod.array(zod.string()),
     }),
     location: zod.string(),
     remote: zod.boolean().optional(),
@@ -627,6 +664,7 @@ export const ListEmployerJobsResponseItem = zod.object({
     industry: zod.string().nullish(),
     size: zod.string().nullish(),
     about: zod.string().nullish(),
+    quickReplies: zod.array(zod.string()),
   }),
   location: zod.string(),
   remote: zod.boolean().optional(),
@@ -686,6 +724,7 @@ export const CreateEmployerJobResponse = zod.object({
     industry: zod.string().nullish(),
     size: zod.string().nullish(),
     about: zod.string().nullish(),
+    quickReplies: zod.array(zod.string()),
   }),
   location: zod.string(),
   remote: zod.boolean().optional(),
@@ -757,6 +796,7 @@ export const ListEmployerMatchesResponseItem = zod.object({
       industry: zod.string().nullish(),
       size: zod.string().nullish(),
       about: zod.string().nullish(),
+      quickReplies: zod.array(zod.string()),
     }),
     location: zod.string(),
     remote: zod.boolean().optional(),

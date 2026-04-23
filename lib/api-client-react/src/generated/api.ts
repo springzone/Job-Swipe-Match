@@ -35,6 +35,7 @@ import type {
   Match,
   Message,
   MessageInput,
+  QuickRepliesInput,
   StatsSummary,
   SwipeInput,
   SwipeResult,
@@ -1443,6 +1444,93 @@ export function useListEmployerCompanies<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Save the list of quick-reply templates for a company
+ */
+export const getUpdateQuickRepliesUrl = (companyId: string) => {
+  return `/api/employer/${companyId}/quick-replies`;
+};
+
+export const updateQuickReplies = async (
+  companyId: string,
+  quickRepliesInput: QuickRepliesInput,
+  options?: RequestInit,
+): Promise<Company> => {
+  return customFetch<Company>(getUpdateQuickRepliesUrl(companyId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(quickRepliesInput),
+  });
+};
+
+export const getUpdateQuickRepliesMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateQuickReplies>>,
+    TError,
+    { companyId: string; data: BodyType<QuickRepliesInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateQuickReplies>>,
+  TError,
+  { companyId: string; data: BodyType<QuickRepliesInput> },
+  TContext
+> => {
+  const mutationKey = ["updateQuickReplies"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateQuickReplies>>,
+    { companyId: string; data: BodyType<QuickRepliesInput> }
+  > = (props) => {
+    const { companyId, data } = props ?? {};
+
+    return updateQuickReplies(companyId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateQuickRepliesMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateQuickReplies>>
+>;
+export type UpdateQuickRepliesMutationBody = BodyType<QuickRepliesInput>;
+export type UpdateQuickRepliesMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Save the list of quick-reply templates for a company
+ */
+export const useUpdateQuickReplies = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateQuickReplies>>,
+    TError,
+    { companyId: string; data: BodyType<QuickRepliesInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateQuickReplies>>,
+  TError,
+  { companyId: string; data: BodyType<QuickRepliesInput> },
+  TContext
+> => {
+  return useMutation(getUpdateQuickRepliesMutationOptions(options));
+};
 
 /**
  * @summary Pending candidates who right-swiped on this company's jobs

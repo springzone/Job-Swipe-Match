@@ -39,6 +39,10 @@ export interface CandidateUpdate {
   openToRemote?: boolean | null;
 }
 
+export interface QuickRepliesInput {
+  quickReplies: string[];
+}
+
 export interface Company {
   id: string;
   name: string;
@@ -47,6 +51,7 @@ export interface Company {
   industry?: string | null;
   size?: string | null;
   about?: string | null;
+  quickReplies: string[];
 }
 
 export interface Job {

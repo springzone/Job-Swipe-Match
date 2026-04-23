@@ -309,6 +309,28 @@ paths:
                 type: array
                 items: { $ref: "#/components/schemas/Company" }
 
+  /employer/{companyId}/quick-replies:
+    put:
+      operationId: updateQuickReplies
+      tags: [employer]
+      summary: Save the list of quick-reply templates for a company
+      parameters:
+        - name: companyId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/QuickRepliesInput" }
+      responses:
+        "200":
+          description: Updated company
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Company" }
+
   /employer/{companyId}/feed:
     get:
       operationId: getEmployerFeed
@@ -479,9 +501,17 @@ components:
         desiredRole: { type: string, nullable: true }
         openToRemote: { type: boolean, nullable: true }
 
+    QuickRepliesInput:
+      type: object
+      required: [quickReplies]
+      properties:
+        quickReplies:
+          type: array
+          items: { type: string, minLength: 1, maxLength: 500 }
+
     Company:
       type: object
-      required: [id, name]
+      required: [id, name, quickReplies]
       properties:
         id: { type: string }
         name: { type: string }
@@ -489,6 +519,9 @@ components:
         industry: { type: string, nullable: true }
         size: { type: string, nullable: true }
         about: { type: string, nullable: true }
+        quickReplies:
+          type: array
+          items: { type: string }
 
     Job:
       type: object

@@ -1,4 +1,4 @@
-import { pgTable, text } from "drizzle-orm/pg-core";
+import { pgTable, text, jsonb } from "drizzle-orm/pg-core";
 
 export const companiesTable = pgTable("companies", {
   id: text("id").primaryKey(),
@@ -7,6 +7,7 @@ export const companiesTable = pgTable("companies", {
   industry: text("industry"),
   size: text("size"),
   about: text("about"),
+  quickReplies: jsonb("quick_replies").$type<string[]>().notNull().default([]),
 });
 
 export type Company = typeof companiesTable.$inferSelect;

@@ -31,6 +31,7 @@ export * from "./matchStatus";
 export * from "./message";
 export * from "./messageInput";
 export * from "./messageSender";
+export * from "./quickRepliesInput";
 export * from "./screeningAnswer";
 export * from "./statsSummary";
 export * from "./statsSummaryTopSkillsInDemandItem";

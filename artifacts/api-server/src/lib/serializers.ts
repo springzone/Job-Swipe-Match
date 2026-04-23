@@ -8,6 +8,7 @@ export function serializeCompany(c: Company) {
     industry: c.industry,
     size: c.size,
     about: c.about,
+    quickReplies: c.quickReplies ?? [],
   };
 }
 
